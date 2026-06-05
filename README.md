@@ -23,9 +23,9 @@ LinguaAI Reader 是一款专为英语学习者打造的 AI 阅读工具。单个
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
-| **API Key** | 你的 API 密钥，完全存储在你自己的浏览器中 |  + "sk-..." +  |
-| **Base URL** | OpenAI 兼容接口地址 |  + "https://api.deepseek.com" +  |
-| **Model** | 模型名称 |  + "deepseek-chat" +  |
+| **API Key** | 你的 API 密钥，完全存储在你自己的浏览器中 |   "sk-..."   |
+| **Base URL** | OpenAI 兼容接口地址 |   "https://api.deepseek.com"   |
+| **Model** | 模型名称 |   "deepseek-chat"   |
 
 支持 DeepSeek、OpenAI、Qwen、Moonshot、Gemini 等云端模型，以及本地 Ollama 部署的开源 Llama 系列。一行配置即可切换，统一协议层适配所有服务商。
 
