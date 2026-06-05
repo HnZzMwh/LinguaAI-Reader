@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LinguaAI Reader - AI 语言学习系统</title>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
 <style>
 /* ========== RESET & BASE ========== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -43,7 +45,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 
 /* ========== MAIN LAYOUT ========== */
 .app-container{display:flex;flex:1;overflow:hidden}
-.sidebar{width:280px;min-width:280px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden}
+.sidebar{width:280px;min-width:280px;background:#fff;border-right:1px solid #e2e8f0;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.sidebar::-webkit-scrollbar{display:none}
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .annotation-panel{width:380px;min-width:380px;background:#fff;border-left:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden}
 
@@ -52,6 +55,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .sidebar-title{font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px}
 .sidebar-btns{display:flex;flex-direction:column;gap:6px}
 .sidebar-btns .btn{width:100%;text-align:left;justify-content:flex-start}
+#fetchSourceContainer{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
+.fetch-btn{padding:5px 8px;font-size:11px;line-height:1.3;white-space:normal;word-break:break-word;text-align:center}
+.exam-item:hover{background:#f1f5f9;border-color:#2563eb !important}
 
 /* ========== ARTICLE TOOLBAR ========== */
 .toolbar{padding:12px 24px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -240,8 +246,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .highlight-active{user-select:text !important;-webkit-user-select:text !important}
 .highlight-active .article-text .token{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='28' viewBox='0 0 20 28'%3E%3Crect x='2' y='2' width='16' height='24' rx='3' fill='%232563eb' opacity='0.8'/%3E%3C/svg%3E") 4 24,pointer !important}
 .highlight-active .token:not(.token-space):not(.punct):hover{outline:2px solid #2563eb;outline-offset:0;border-radius:3px;filter:brightness(1.05)}
-.article-text .token.highlighted{background:#2563eb !important;color:#fff !important;border-radius:0 !important;box-shadow:none !important}
-.article-text .token.token-space.highlighted{color:transparent !important;background:#2563eb !important}
+.article-text .token.highlighted{color:#fff !important;border-radius:0 !important;box-shadow:none !important}
+.article-text .token.token-space.highlighted{color:transparent !important}
 #highlightBtn.active{background:#2563eb;color:#fff}
 #highlightBtn.active svg{stroke:#fff}
 </style>
@@ -255,10 +261,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
     <span class="logo-text">LinguaAI Reader</span>
   </div>
   <div class="header-right">
-    <button class="btn btn-ghost btn-sm" id="highlightBtn" onclick="toggleHighlightMode()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4l-3-3-10 10z"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"/></svg>
-      <span data-i18n="brushLabel">笔刷</span>
-    </button>
+        <div style="position:relative;display:inline-block">
+          <button class="btn btn-ghost btn-sm" id="highlightBtn" onclick="toggleHighlightMode()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4l-3-3-10 10z"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"/></svg>
+            <span data-i18n="brushLabel">笔刷</span>
+            <span id="hlColorDot" onclick="toggleHLPicker(event)" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#2563eb;margin-left:4px;vertical-align:middle;cursor:pointer;border:2px solid #e2e8f0"></span>
+          </button>
+          <div id="hlColorPicker" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);white-space:nowrap"></div>
+        </div>
     <button class="btn btn-ghost btn-sm" onclick="showWordBook()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
       <span data-i18n="wbTitle">单词本</span>
@@ -284,32 +294,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 
   <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar">
-    <div class="sidebar-section" style="flex-shrink:0">
-      <div class="sidebar-title" data-i18n="genTitle">生成文章</div>
-      <div class="sidebar-btns">
-        <button class="btn btn-outline btn-sm" onclick="generateArticle('ielts')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          <span data-i18n="genIelts">雅思文章</span>
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="generateArticle('cet')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          <span data-i18n="genCet">四六级文章</span>
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="generateArticle('chinese')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          <span data-i18n="genChinese">中文阅读</span>
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="generateArticle('business')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          <span data-i18n="genBusiness">商务英语</span>
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="showCustomPrompt()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span data-i18n="genCustom">自定义</span>
-        </button>
-      </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title" data-i18n="fetchTitle">学习资源</div>
+      <div id="fetchSourceContainer"></div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:8px" data-i18n="fetchHint">点击网站跳转，自行选取文章后导入</div>
     </div>
-    <div class="sidebar-section" style="flex-shrink:0">
+    <div class="sidebar-section">
+      <div class="sidebar-title" data-i18n="genTitle">生成文章</div>
+      <div class="sidebar-btns" id="genButtonContainer"></div>
+    </div>
+    <div class="sidebar-section">
       <div class="sidebar-title" data-i18n="shortcutTitle">快捷操作</div>
       <div class="sidebar-btns">
         <button class="btn btn-ghost btn-sm" onclick="scrollToTop()">
@@ -326,7 +320,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
         </button>
       </div>
     </div>
-    <div class="sidebar-section" style="flex:1;overflow-y:auto;border-top:1px solid #e2e8f0">
+    <div class="sidebar-section">
       <div class="sidebar-title" data-i18n="historyTitle">文章历史</div>
       <button class="btn btn-outline btn-sm" onclick="importArticle()" style="width:100%;margin-bottom:8px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -334,23 +328,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
       </button>
       <div id="articleHistoryList" style="display:flex;flex-direction:column;gap:4px">
         <div style="text-align:center;color:#94a3b8;font-size:12px;padding:16px 0"><span data-i18n="historyEmpty">暂无文章历史</span></div>
-      </div>
-    </div>
-    <div class="sidebar-section" style="flex-shrink:0;border-top:1px solid #e2e8f0">
-      <div class="sidebar-title" data-i18n="statsTitle">今日统计</div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <div style="text-align:center;flex:1;min-width:60px;padding:8px;background:#f8fafc;border-radius:8px">
-          <div id="todayWords" style="font-size:20px;font-weight:700;color:#2563eb">0</div>
-          <div style="font-size:11px;color:#94a3b8" data-i18n="statsWords">词汇</div>
-        </div>
-        <div style="text-align:center;flex:1;min-width:60px;padding:8px;background:#f8fafc;border-radius:8px">
-          <div id="todayPhrases" style="font-size:20px;font-weight:700;color:#7c3aed">0</div>
-          <div style="font-size:11px;color:#94a3b8" data-i18n="statsPhrases">短语</div>
-        </div>
-        <div style="text-align:center;flex:1;min-width:60px;padding:8px;background:#f8fafc;border-radius:8px">
-          <div id="todaySentences" style="font-size:20px;font-weight:700;color:#059669">0</div>
-          <div style="font-size:11px;color:#94a3b8" data-i18n="statsSentences">句子</div>
-        </div>
       </div>
     </div>
 <input type="file" id="importFileInput" accept=".txt,.md,.docx" style="display:none" onchange="handleImportFile(event)">
@@ -379,6 +356,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
         <span data-i18n="annTitle">AI 批注</span>
       </h3>
       <div style="display:flex;align-items:center;gap:4px">
+        <div id="manualInputWrap" style="display:none;position:relative">
+          <input id="manualInput" type="text" placeholder="" style="width:120px;padding:4px 8px;font-size:12px;border:1.5px solid #2563eb;border-radius:6px;outline:none" autocomplete="off">
+        </div>
+        <button class="btn btn-sm btn-ghost" id="manualSearchBtn" onclick="toggleManualInput()" style="padding:4px 6px" title="输入查询">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
         <button class="btn btn-sm btn-primary" id="modeWord" onclick="setMode('word')" style="padding:4px 10px;font-size:12px"><span data-i18n="modeWord">单词</span></button>
         <button class="btn btn-sm btn-secondary" id="modeSentence" onclick="setMode('sentence')" style="padding:4px 10px;font-size:12px"><span data-i18n="modeSentence">句子</span></button>
       </div>
@@ -439,7 +422,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
     <div class="modal-header">
       <h2>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-        <span data-i18n="wbTitle">单词本</span>
+        <span data-i18n="wbTitle">生词本</span>
       </h2>
       <button class="modal-close" onclick="hideWordBook()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -460,6 +443,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
         <div class="wb-export-btns">
           <button class="btn btn-sm btn-outline" onclick="exportWordBook('json')">JSON</button>
           <button class="btn btn-sm btn-outline" onclick="exportWordBook('csv')">CSV</button>
+          <button class="btn btn-sm btn-outline" onclick="exportWordBookPDF()">PDF</button>
           <button class="btn btn-sm btn-danger" onclick="clearWordBook()"><span data-i18n="wbClear">清空</span></button>
         </div>
       </div>
@@ -504,7 +488,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
         <div style="font-size:15px;color:#64748b;margin-top:2px;letter-spacing:2px" data-i18n="reviewScore">正确率</div>
         <div id="reviewWrongList" style="margin-top:16px;text-align:left"></div>
         <button class="btn btn-primary" onclick="reviewWrongWords()" style="margin-top:12px" id="reviewRetryBtn"><span data-i18n="reviewRetry">复习错词</span></button>
-        <button class="btn btn-primary" onclick="generateReviewArticle()" style="margin-top:8px" id="reviewGenArticleBtn"><span data-i18n="reviewGenArticle">生成巩固文章</span></button>
         <button class="btn btn-secondary" onclick="endReview()" style="margin-top:8px"><span data-i18n="reviewDone">完成</span></button>
       </div>
     </div>
@@ -570,6 +553,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
   </div>
 </div>
 
+<!-- ===== EXAM PAPERS MODAL ===== -->
+<div class="modal-overlay" id="examModal">
+  <div class="modal" style="width:500px">
+    <div class="modal-header">
+      <h2><span data-i18n="examTitle">历年真题</span></h2>
+      <button class="modal-close" onclick="hideExamModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="examList" style="padding:20px 24px;text-align:center;color:#94a3b8">
+      <p>首次使用请选择真题文件夹根目录</p>
+      <button class="btn btn-primary" onclick="showExamPapers()" style="margin-top:12px">📁 选择文件夹</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -591,10 +590,11 @@ const STATE = {
   wordBook: [],          // { word, meaning, pos, sentence, timestamp }
   sentences: [],         // { text, analysis, timestamp }
   articleHistory: [],    // { id, title, content, type, timestamp }
-  highlights: {},        // { articleId: [wordLower, wordLower, ...] }
+  highlights: {},        // { articleId: { color:'#...', words:[wordLower, ...] } }
   articleText: '',
   currentArticleId: null,
   highlightMode: false,
+  highlightColor: '#2563eb',
   currentMode: 'word',   // 'word' | 'sentence'
   isSpeaking: false,
   speechSynth: window.speechSynthesis,
@@ -609,7 +609,7 @@ const LANG = {
     annotationSynonyms: '同义词', annotationAntonyms: '反义词', annotationExample: '例句',
     annotationCollocations: '常用搭配', annotationDerivatives: '常见衍生短语', annotationLongSentences: '长难句例子',
     annotationFrequency: '使用频率', annotationSentence: '原文句子', annotationMore: '更多学习',
-    annotationSave: '+ 加入单词本', annotationSaved: '✓ 已保存', annotationListen: '朗读句子',
+    annotationSave: '+ 加入生词本', annotationSaved: '✓ 已保存', annotationListen: '朗读句子',
     annotationDeepTitle: '深度扩展',
     sentTitle: '长难句分析', sentTranslation: '中文翻译', sentMain: '句子主干',
     sentStructure: '语法结构', sentClause: '从句分析', sentGrammar: '语法要点',
@@ -618,20 +618,22 @@ const LANG = {
     brushLabel: '笔刷', highlightCleared: '已清除全部高亮',
     aiAnalyzing: 'AI 正在分析词汇...', aiSentAnalyzing: 'AI 正在分析句子...',
     aiMoreLearning: '正在获取更多学习内容...', aiParseError: '无法解析 AI 返回的 JSON 格式',
+
     aiExplainLang: '中文', aiExplainPrompt: '请用中文解释',
-    wbTitle: '单词本', wbTotal: '总计', wbToday: '今日', wbEmpty: '暂无记录', wbClear: '清空',
+    wbTitle: '生词本', wbTotal: '总计', wbToday: '今日', wbEmpty: '暂无记录', wbClear: '清空',
     reviewTitle: '单词复习', reviewProgress: '复习完成', reviewScore: '正确率',
     reviewCorrect: '✓ 正确', reviewWrong: '✗ 错误', reviewAnswer: '正确答案',
-    reviewAllCorrect: '全部正确！🎉', reviewRetry: '复习错词', reviewGenArticle: '生成巩固文章',
+    reviewAllCorrect: '全部正确！🎉', reviewRetry: '复习错词',
     reviewDone: '完成', reviewConfirm: '确认', reviewNext: '下一个', reviewSkip: '跳过',
     reviewInputPlaceholder: '输入中文翻译...',
     exportTitle: '导出数据', exportCurrent: '当前文章', exportAll: '全部数据',
     importBtn: '导入文章', historyTitle: '文章历史', historyEmpty: '暂无文章历史',
     shortcutTitle: '快捷操作', scrollTop: '回到顶部', clearArticle: '清空文章',
-    clearHighlight: '清除高亮', statsTitle: '今日统计', statsWords: '词汇',
-    statsPhrases: '短语', statsSentences: '句子',
+    clearHighlight: '清除高亮',
     genIelts: '雅思文章', genCet: '四六级文章', genChinese: '中文阅读', genBusiness: '商务英语',
     genCustom: '自定义', genTitle: '生成文章',
+    fetchTitle: '学习资源', fetchHint: '点击网站跳转，自行选取文章后导入',
+    examTitle: '历年真题',
     customPromptLabel: '生成提示词', customPromptPlaceholder: '例如：生成一篇关于气候变化的托福文章，300词，包含10个学术词汇',
     customLangLabel: '语言', langEn: '英文', langZh: '中文', customGenerate: '生成',
     modeWord: '单词', modeSentence: '句子', modeLabel: '模式',
@@ -642,14 +644,14 @@ const LANG = {
     configApiKeyPlaceholder: 'sk-...', configBaseUrlPlaceholder: 'https://api.deepseek.com', configModelPlaceholder: 'deepseek-chat',
     ttsPlay: '朗读', ttsStop: '停止',
     wordCount: '已学', wordCountLabel: '词汇量：',
-    annTitle: 'AI 批注',
-    annEmpty: '点击文章中的单词查看 AI 批注', annEmptySent: '切换"句子"模式可分析长难句',
+    annTitle: 'AI 解析',
+    annEmpty: '点击文章中的单词查看 AI 解析', annEmptySent: '切换"句子"模式可分析长难句',
     brushActive: '笔刷已开启', brushInactive: '笔刷',
     wbFilter: '筛选', wbReview: '复习模式', wbDateToLabel: '至',
     analysisFailed: '分析失败', apiConfigIncomplete: '配置不完整',
     modeWordTip: '点击查看词汇批注', modeSentTip: '点击分析此句',
     exportCurrentTxt: '导出当前文章 (TXT)', exportCurrentMd: '导出当前文章 (Markdown)',
-    exportAllData: '导出全部数据', exportDesc: '包含：单词本 + AI 批注 + 文章历史',
+    exportAllData: '导出全部数据', exportDesc: '包含：生词本 + AI 解析 + 文章历史',
     exportClose: '关闭',
     pos: '词性', chinese: '中文释义', englishMeaning: '英文释义', context: '上下文含义',
     synonyms: '同义词', antonyms: '反义词', example: '例句', collocations: '常用搭配',
@@ -675,20 +677,22 @@ const LANG = {
     brushLabel: 'Brush', highlightCleared: 'All highlights cleared',
     aiAnalyzing: 'AI is analyzing...', aiSentAnalyzing: 'AI is analyzing the sentence...',
     aiMoreLearning: 'Getting more learning content...', aiParseError: 'Could not parse AI JSON response',
+
     aiExplainLang: 'English', aiExplainPrompt: 'Explain in English',
     wbTitle: 'Word Book', wbTotal: 'Total', wbToday: 'Today', wbEmpty: 'No records yet', wbClear: 'Clear',
     reviewTitle: 'Review', reviewProgress: 'Review Complete', reviewScore: 'Accuracy',
     reviewCorrect: '✓ Correct', reviewWrong: '✗ Wrong', reviewAnswer: 'Answer',
-    reviewAllCorrect: 'All correct! 🎉', reviewRetry: 'Review Wrong Words', reviewGenArticle: 'Generate Article',
+    reviewAllCorrect: 'All correct! 🎉', reviewRetry: 'Review Wrong Words',
     reviewDone: 'Done', reviewConfirm: 'Check', reviewNext: 'Next', reviewSkip: 'Skip',
     reviewInputPlaceholder: 'Type the translation...',
     exportTitle: 'Export', exportCurrent: 'Current Article', exportAll: 'All Data',
     importBtn: 'Import', historyTitle: 'History', historyEmpty: 'No articles yet',
     shortcutTitle: 'Quick Actions', scrollTop: 'Scroll to Top', clearArticle: 'Clear Article',
-    clearHighlight: 'Clear Highlights', statsTitle: 'Today', statsWords: 'Words',
-    statsPhrases: 'Phrases', statsSentences: 'Sentences',
+    clearHighlight: 'Clear Highlights',
     genIelts: 'IELTS', genCet: 'CET-4/6', genChinese: 'Chinese', genBusiness: 'Business',
     genCustom: 'Custom', genTitle: 'Generate',
+    fetchTitle: 'Resources', fetchHint: 'Visit sites to find articles, then import',
+    examTitle: 'Past Exam Papers',
     customPromptLabel: 'Prompt', customPromptPlaceholder: 'e.g. Generate a TOEFL article about climate change, 300 words, 10 academic terms',
     customLangLabel: 'Language', langEn: 'English', langZh: 'Chinese', customGenerate: 'Generate',
     modeWord: 'Word', modeSentence: 'Sentence', modeLabel: 'Mode',
@@ -699,20 +703,20 @@ const LANG = {
     configApiKeyPlaceholder: 'sk-...', configBaseUrlPlaceholder: 'https://api.deepseek.com', configModelPlaceholder: 'deepseek-chat',
     ttsPlay: 'Play', ttsStop: 'Stop',
     wordCount: 'learned', wordCountLabel: 'Words:',
-    annTitle: 'AI Notes',
-    annEmpty: 'Click a word to view AI notes', annEmptySent: 'Switch to "Sentence" mode for complex sentences',
+    annTitle: 'AI Analysis',
+    annEmpty: 'Click a word for AI analysis', annEmptySent: 'Switch to "Sentence" mode for complex sentences',
     brushActive: 'Highlighter on', brushInactive: 'Brush',
     wbFilter: 'Filter', wbReview: 'Review', wbDateToLabel: 'to',
     analysisFailed: 'Analysis failed', apiConfigIncomplete: 'Configuration incomplete',
     modeWordTip: 'Click to analyze word', modeSentTip: 'Click to analyze sentence',
     exportCurrentTxt: 'Export Article (TXT)', exportCurrentMd: 'Export Article (Markdown)',
-    exportAllData: 'Export All Data', exportDesc: 'Includes: Word book + AI annotations + History',
+    exportAllData: 'Export All Data', exportDesc: 'Includes: Vocab + AI Analysis + History',
     exportClose: 'Close',
     pos: 'Part of Speech', chinese: 'Definition', englishMeaning: 'English', context: 'Context Meaning',
     synonyms: 'Synonyms', antonyms: 'Antonyms', example: 'Example', collocations: 'Collocations',
     derivatives: 'Derivative Phrases', longSentences: 'Sentence Examples', frequency: 'Frequency',
     originalSentence: 'Original Sentence', moreLearning: 'More Learning',
-    addWordBook: '+ Save to Word Book', listenSentence: 'Listen',
+    addWordBook: '+ Save to Vocab', listenSentence: 'Listen',
     sheetAnalysis: 'Sentence Analysis', sheetTranslation: 'Translation', sheetMain: 'Main Clause',
     sheetStructure: 'Structure', sheetClause: 'Clause Analysis', sheetGrammar: 'Grammar Points',
     sheetParaphrase: 'Paraphrase', sheetWritingTip: 'Writing Tip',
@@ -757,6 +761,9 @@ function applyLanguage() {
     // Update TTS button title
     const ttsBtn = document.getElementById('ttsBtn');
     if (ttsBtn) ttsBtn.title = t('ttsPlay') + '/' + t('ttsStop');
+    // Re-render dynamic sidebar sections for current language
+    renderGenButtons();
+    renderResources();
   } catch(e) { console.warn('applyLanguage error:', e); }
 }
 
@@ -811,7 +818,31 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHighlights();
   rebuildTranslationCache();
   applyLanguage();
-  updateStats();
+  // Build color picker
+  const picker = document.getElementById('hlColorPicker');
+  if (picker) {
+    const colors = ['#2563eb','#ef4444','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+    colors.forEach(c => {
+      const el = document.createElement('div');
+      el.style.cssText = 'width:20px;height:20px;border-radius:4px;background:' + c + ';cursor:pointer;display:inline-block;margin:2px;border:2px solid transparent';
+      el.onclick = function(e) { setHLColor(c); e.stopPropagation(); };
+      el.onmouseover = function() { el.style.borderColor = '#cbd5e1'; };
+      el.onmouseout = function() { el.style.borderColor = 'transparent'; };
+      picker.appendChild(el);
+    });
+  }
+  // Manual input Enter/Escape
+  document.getElementById('manualInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitManualSearch(this.value);
+    if (e.key === 'Escape') document.getElementById('manualInputWrap').style.display = 'none';
+  });
+  // Close color picker on outside click
+  document.addEventListener('click', function(e) {
+    const p = document.getElementById('hlColorPicker');
+    if (p && !e.target.closest('#hlColorPicker') && !e.target.closest('#hlColorDot')) {
+      p.style.display = 'none';
+    }
+  });
 });
 
 // ============================================================
@@ -1004,8 +1035,19 @@ const ARTICLE_PROMPTS = {
 };
 
 async function generateArticle(type) {
-  const prompt = ARTICLE_PROMPTS[type];
-  if (!prompt) return;
+  const basePrompt = ARTICLE_PROMPTS[type];
+  if (!basePrompt) return;
+
+  // RAG: select up to 15 unmastered words, prioritize by wrongCount + rarity
+  let vocabPrompt = basePrompt;
+  const candidates = STATE.wordBook
+    .filter(w => w.word && !w.mastered)
+    .sort((a, b) => (b.wrongCount || 0) - (a.wrongCount || 0) || (b.frequency || 3) - (a.frequency || 3))
+    .slice(0, 15);
+  if (candidates.length > 0) {
+    const sample = candidates.map(w => w.word).join('、');
+    vocabPrompt += `\n\n【词汇要求】请在下文中尽量自然地融入以下生词（若不合适可跳过）：${sample}`;
+  }
 
   showLoading(`AI 正在生成${getArticleTypeName(type)}...`);
   clearAnnotation();
@@ -1013,7 +1055,7 @@ async function generateArticle(type) {
   try {
     const content = await callLLM([
       { role: 'system', content: '你是一个专业的语言学习内容生成助手。请严格按照用户要求的格式输出。不要输出多余的解释。' },
-      { role: 'user', content: prompt }
+      { role: 'user', content: vocabPrompt }
     ], { temperature: 0.8, max_tokens: 4096 });
 
     hideLoading();
@@ -1028,6 +1070,385 @@ async function generateArticle(type) {
 function getArticleTypeName(type) {
   const names = { ielts: '雅思文章', cet: '四六级文章', chinese: '中文阅读', business: '商务英语' };
   return names[type] || '文章';
+}
+
+// ===== GENERATE BUTTONS (dynamic by language) =====
+const GEN_LAYOUTS = {
+  zh: ['ielts', 'cet', 'business', 'custom'],
+  en: ['chinese', 'custom'],
+};
+const GEN_BTN_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
+
+// ===== EXAM PAPERS (IndexedDB persistent storage) =====
+let examPapersCache = {};
+let activeExamCat = '';
+let examDB = null;
+let examDeleteMode = false;
+let examSelectedForDelete = new Set();
+
+function openExamDB() {
+  return new Promise(resolve => {
+    if (examDB) return resolve(examDB);
+    const req = indexedDB.open('LinguaAI_Exam', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('pdfs', { keyPath: 'path' });
+    req.onsuccess = e => { examDB = e.target.result; resolve(examDB); };
+    req.onerror = () => resolve(null);
+  });
+}
+
+async function loadExamFromDB() {
+  const db = await openExamDB();
+  if (!db) return;
+  const metaRaw = localStorage.getItem('linguaai_exam_meta');
+  if (!metaRaw) return;
+  const meta = JSON.parse(metaRaw);
+  examPapersCache = {};
+  for (const cat of Object.keys(meta)) {
+    examPapersCache[cat] = [];
+    for (const f of meta[cat]) {
+      const path = cat + '/' + (f.sub ? f.sub + '/' : '') + f.name;
+      examPapersCache[cat].push({ name: f.name, sub: f.sub, path, blob: null });
+    }
+  }
+  // Try to load blobs from IndexedDB
+  for (const cat of Object.keys(examPapersCache)) {
+    for (const f of examPapersCache[cat]) {
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const tx = db.transaction('pdfs', 'readonly');
+          const req = tx.objectStore('pdfs').get(f.path);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = reject;
+        });
+        if (result) {
+          // Reconstruct Blob from stored ArrayBuffer (more reliable than storing Blob directly)
+          if (result.blob) {
+            f.blob = result.blob;
+          } else if (result.data) {
+            f.blob = new Blob([result.data], { type: 'application/pdf' });
+          }
+        }
+      } catch(e) { console.warn('IndexedDB read failed:', f.path, e); }
+    }
+  }
+  if (!activeExamCat) activeExamCat = Object.keys(examPapersCache).sort()[0];
+}
+
+async function pickExamFolder() {
+  const picker = document.createElement('input');
+  picker.type = 'file';
+  picker.webkitdirectory = true;
+  picker.onchange = async function(e) {
+    const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    if (files.length === 0) { showToast('未找到 PDF 文件', 'warning'); return; }
+    const db = await openExamDB();
+    for (const f of files) {
+      const parts = f.webkitRelativePath.split('/');
+      const name = parts.pop();
+      const cat = parts.length > 0 ? parts[0] : '其他';
+      const sub = parts.length > 1 ? parts[1] : '';
+      const path = f.webkitRelativePath;
+      if (examPapersCache[cat]?.some(x => x.path === path)) continue;
+      const arrayBuf = await f.arrayBuffer();
+      const blob = new Blob([arrayBuf], { type: 'application/pdf' });
+      if (!examPapersCache[cat]) examPapersCache[cat] = [];
+      examPapersCache[cat].push({ name, sub, path, blob });
+      // Persist to IndexedDB (store ArrayBuffer for reliability, await completion)
+      if (db) {
+        try {
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('pdfs', 'readwrite');
+            tx.objectStore('pdfs').put({ path, data: arrayBuf });
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          });
+        } catch(e) { console.warn('IndexedDB write failed:', path, e); }
+      }
+    }
+    showToast('??? ' + files.length + ' ???', 'success');
+    const meta = {};
+    for (const cat of Object.keys(examPapersCache))
+      meta[cat] = examPapersCache[cat].map(f => ({ name: f.name, sub: f.sub, path: f.path }));
+    localStorage.setItem('linguaai_exam_meta', JSON.stringify(meta));
+    if (!activeExamCat || !examPapersCache[activeExamCat]) activeExamCat = Object.keys(examPapersCache).sort()[0];
+    renderExamModal();
+  };
+  picker.click();
+}
+
+async function showExamPapers() {
+  if (Object.keys(examPapersCache).length === 0) {
+    await loadExamFromDB();
+    if (Object.keys(examPapersCache).length > 0) {
+      renderExamModal();
+      return;
+    }
+    pickExamFolder();
+    return;
+  }
+  renderExamModal();
+}
+
+function selectExamCat(cat) {
+  activeExamCat = cat;
+  renderExamModal();
+}
+
+function renderExamModal() {
+  const cats = Object.keys(examPapersCache);
+  // Move active cat to front
+  const sorted = activeExamCat ? [activeExamCat, ...cats.filter(c => c !== activeExamCat)] : cats;
+
+  // Compute selected count for current category
+  let selCount = 0;
+  if (examDeleteMode && activeExamCat && examPapersCache[activeExamCat]) {
+    for (const f of examPapersCache[activeExamCat]) {
+      if (examSelectedForDelete.has(f.path)) selCount++;
+    }
+  }
+  const totalCount = activeExamCat && examPapersCache[activeExamCat] ? examPapersCache[activeExamCat].length : 0;
+
+  document.getElementById('examList').innerHTML = `
+    <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      ${sorted.map(cat =>
+        `<button class="btn btn-sm ${cat === activeExamCat ? 'btn-primary' : 'btn-outline'}"
+                 onclick="selectExamCat('${cat.replace(/'/g,"\\'")}')"
+                 style="font-size:12px">📁 ${cat}</button>`
+      ).join('')}
+      <button class="btn btn-sm btn-outline" onclick="pickExamFolder()" style="font-size:12px">＋</button>
+      ${examDeleteMode
+        ? `<button class="btn btn-sm btn-outline" onclick="toggleExamDeleteMode()" style="font-size:12px;color:#ef4444;border-color:#fecaca">✕ 取消</button>`
+        : `<button class="btn btn-sm btn-outline" onclick="toggleExamDeleteMode()" style="font-size:12px" title="删除文件">🗑️ 删除</button>`
+      }
+    </div>
+    ${examDeleteMode && activeExamCat && totalCount > 0 ? `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px">
+        <label style="font-size:13px;color:#991b1b;cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none">
+          <input type="checkbox" onchange="toggleExamSelectAll(this.checked)" ${selCount === totalCount ? 'checked' : ''} style="accent-color:#ef4444">
+          全选 (${selCount}/${totalCount})
+        </label>
+        <div style="flex:1"></div>
+        <button class="btn btn-sm btn-danger" onclick="confirmExamDelete()" ${selCount === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>删除选中项 (${selCount})</button>
+      </div>
+    ` : ''}
+    <div style="margin-top:4px">
+      ${activeExamCat && examPapersCache[activeExamCat] ? (() => {
+        const items = examPapersCache[activeExamCat];
+        const subs = {};
+        for (const f of items) {
+          const key = f.sub || '__root__';
+          if (!subs[key]) subs[key] = [];
+          subs[key].push(f);
+        }
+        return Object.keys(subs).sort().map(sk => `
+          ${sk !== '__root__' ? `<div style="font-size:12px;color:#64748b;margin:6px 0 3px 0">▸ ${sk}</div>` : ''}
+          ${subs[sk].map(f => {
+            const isSel = examSelectedForDelete.has(f.path);
+            return examDeleteMode
+              ? `<div class="exam-item"
+                   style="padding:6px 10px;border:1px solid ${isSel ? '#ef4444' : '#e2e8f0'};border-radius:6px;cursor:pointer;font-size:13px;margin-bottom:3px;transition:all 0.1s;display:flex;align-items:center;gap:8px;${isSel ? 'background:#fef2f2' : ''}"
+                   onclick="toggleExamSelect('${f.path.replace(/'/g,"\\'")}', this)">
+                   <input type="checkbox" ${isSel ? 'checked' : ''} style="accent-color:#ef4444;pointer-events:none">
+                   <span style="flex:1">${f.name}</span>
+                 </div>`
+              : `<div class="exam-item"
+                   style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:13px;margin-bottom:3px;transition:all 0.1s"
+                   onclick="openExamPaper('${activeExamCat.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}','${(f.sub||'').replace(/'/g,"\\'")}')"
+                   onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#2563eb'"
+                   onmouseout="this.style.background='';this.style.borderColor='#e2e8f0'">${f.name}</div>`;
+          }).join('')}
+        `).join('');
+      })() : '<div style="color:#94a3b8;text-align:center;padding:20px">选择文件夹以查看文件</div>'}
+    </div>
+  `;
+  document.getElementById('examModal').classList.add('active');
+}
+
+function openExamPaper(cat, name, sub) {
+  const f = examPapersCache[cat]?.find(x => x.name === name && (x.sub||'') === (sub||''));
+  if (!f) return;
+  if (!f.blob) {
+    showToast('文件数据未加载，请重新选择文件夹', 'warning');
+    hideExamModal();
+    pickExamFolder();
+    return;
+  }
+  const url = URL.createObjectURL(f.blob);
+  const area = document.getElementById('articleArea');
+  STATE.articleText = '';
+  area.innerHTML = `<div style="display:flex;flex-direction:column;height:100%">
+    <div style="padding:8px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;font-size:13px;color:#475569;flex-shrink:0">
+      <span style="font-weight:600">${f.name}</span>
+      <span style="color:#94a3b8">|</span>
+      <span>${(f.blob.size / 1024 / 1024).toFixed(1)} MB</span>
+    </div>
+    <iframe src="${url}" style="flex:1;width:100%;border:none;min-height:0"></iframe>
+  </div>`;
+  document.getElementById('examModal').classList.remove('active');
+  showToast('已打开: ' + f.name, 'success');
+}
+
+function hideExamModal() {
+  examDeleteMode = false;
+  examSelectedForDelete.clear();
+  document.getElementById('examModal').classList.remove('active');
+}
+
+function toggleExamDeleteMode() {
+  examDeleteMode = !examDeleteMode;
+  examSelectedForDelete.clear();
+  renderExamModal();
+}
+
+function toggleExamSelect(path, el) {
+  if (examSelectedForDelete.has(path)) {
+    examSelectedForDelete.delete(path);
+    el.style.background = '';
+    el.style.borderColor = '#e2e8f0';
+    const cb = el.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = false;
+  } else {
+    examSelectedForDelete.add(path);
+    el.style.background = '#fef2f2';
+    el.style.borderColor = '#ef4444';
+    const cb = el.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = true;
+  }
+  updateExamDeleteToolbar();
+}
+
+function toggleExamSelectAll(checked) {
+  if (!activeExamCat || !examPapersCache[activeExamCat]) return;
+  examSelectedForDelete.clear();
+  if (checked) {
+    for (const f of examPapersCache[activeExamCat]) {
+      examSelectedForDelete.add(f.path);
+    }
+  }
+  renderExamModal();
+}
+
+function updateExamDeleteToolbar() {
+  const total = activeExamCat && examPapersCache[activeExamCat] ? examPapersCache[activeExamCat].length : 0;
+  const sel = examSelectedForDelete.size;
+  const allCb = document.querySelector('#examList input[type=checkbox][onchange*="toggleExamSelectAll"]');
+  if (allCb) allCb.checked = (sel === total && total > 0);
+  const label = allCb ? allCb.parentElement : null;
+  if (label) {
+    const textNode = label.lastChild;
+    if (textNode) textNode.textContent = ' 全选 (' + sel + '/' + total + ')';
+  }
+  const delBtn = document.querySelector('#examList .btn-danger');
+  if (delBtn) {
+    delBtn.textContent = '删除选中项 (' + sel + ')';
+    if (sel === 0) {
+      delBtn.disabled = true;
+      delBtn.style.opacity = '0.5';
+      delBtn.style.cursor = 'not-allowed';
+    } else {
+      delBtn.disabled = false;
+      delBtn.style.opacity = '';
+      delBtn.style.cursor = '';
+    }
+  }
+}
+
+async function confirmExamDelete() {
+  if (examSelectedForDelete.size === 0) return;
+  const count = examSelectedForDelete.size;
+  if (!confirm('确定要删除选中的 ' + count + ' 个文件吗？此操作不可撤销。')) return;
+
+  const db = await openExamDB();
+  if (db) {
+    for (const path of examSelectedForDelete) {
+      try {
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('pdfs', 'readwrite');
+          tx.objectStore('pdfs').delete(path);
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch(e) { console.warn('IndexedDB delete failed:', path, e); }
+    }
+  }
+
+  for (const cat of Object.keys(examPapersCache)) {
+    examPapersCache[cat] = examPapersCache[cat].filter(f => !examSelectedForDelete.has(f.path));
+    if (examPapersCache[cat].length === 0) {
+      delete examPapersCache[cat];
+    }
+  }
+
+  const meta = {};
+  for (const cat of Object.keys(examPapersCache)) {
+    meta[cat] = examPapersCache[cat].map(f => ({ name: f.name, sub: f.sub, path: f.path }));
+  }
+  localStorage.setItem('linguaai_exam_meta', JSON.stringify(meta));
+
+  if (!examPapersCache[activeExamCat]) {
+    activeExamCat = Object.keys(examPapersCache).sort()[0] || '';
+  }
+  examDeleteMode = false;
+  examSelectedForDelete.clear();
+
+  if (Object.keys(examPapersCache).length === 0) {
+    hideExamModal();
+    showToast('已全部删除，可重新导入文件夹', 'success');
+  } else {
+    renderExamModal();
+    showToast('已删除 ' + count + ' 个文件', 'success');
+  }
+}
+
+// ===== LEARNING RESOURCES (dynamic by language) =====
+const FETCH_RESOURCES = {
+  zh: [
+    { name: 'BBC Learning English', url: 'https://www.bbc.co.uk/learningenglish' },
+    { name: 'VOA Learning English', url: 'https://learningenglish.voanews.com/' },
+    { name: 'British Council', url: 'https://learnenglish.britishcouncil.org/' },
+    { name: 'Smithsonian', url: 'https://www.smithsonianmag.com/' },
+    { name: 'NASA News', url: 'https://www.nasa.gov/news/' },
+    { name: 'Reuters', url: 'https://www.reuters.com/' },
+    { name: 'AP News', url: 'https://apnews.com/' },
+    { name: 'NPR', url: 'https://www.npr.org/' },
+    { name: 'maspeak', url: 'https://maspeak.com/' },
+    { name: 'My English Pages', url: 'https://www.myenglishpages.com/reading/' },
+    { name: 'WSJ', url: 'https://www.wsj.com/' },
+    { name: 'tingroom', url: 'https://www.tingroom.com/' },
+    { name: 'enread', url: 'https://www.enread.com/' },
+    { name: '历年真题', url: 'showExamPapers', isModal: true },
+  ],
+  en: [
+    { name: 'China Daily', url: 'https://www.chinadaily.com.cn/' },
+    { name: "People's Daily", url: 'http://www.people.com.cn/' },
+    { name: 'Xinhua', url: 'https://www.xinhuanet.com/' },
+    { name: 'CCTV News', url: 'https://news.cctv.com/' },
+    { name: 'Sina News', url: 'https://news.sina.com.cn/' },
+    { name: 'Tencent News', url: 'https://news.qq.com/' },
+  ],
+};
+
+function renderResources() {
+  const container = document.getElementById('fetchSourceContainer');
+  if (!container) return;
+  const items = FETCH_RESOURCES[uiLang] || FETCH_RESOURCES.zh;
+  container.innerHTML = items.map(item => {
+    if (item.isModal) {
+      return `<button class="btn btn-outline btn-sm fetch-btn" onclick="${item.url}()">${item.name}</button>`;
+    }
+    return `<a class="btn btn-outline btn-sm fetch-btn" href="${item.url}" target="_blank" rel="noopener">${item.name}</a>`;
+  }).join('');
+}
+
+function renderGenButtons() {
+  const container = document.getElementById('genButtonContainer');
+  if (!container) return;
+  const keys = GEN_LAYOUTS[uiLang] || GEN_LAYOUTS.zh;
+  container.innerHTML = keys.map(key => {
+    const action = key === 'custom' ? "showCustomPrompt()" : `generateArticle('${key}')`;
+    const i18nKey = key === 'custom' ? 'genCustom' : `gen${key.charAt(0).toUpperCase() + key.slice(1)}`;
+    return `<button class="btn btn-outline btn-sm" onclick="${action}">${GEN_BTN_ICON}<span data-i18n="${i18nKey}">${t(i18nKey)}</span></button>`;
+  }).join('');
 }
 
 function showCustomPrompt() {
@@ -1379,7 +1800,6 @@ Return JSON ONLY (no extra text):
     }
 
     showAnnotationWord(annotation);
-    updateStats();
     showToast(`已分析: ${word}`, 'info');
 
   } catch(e) {
@@ -1460,7 +1880,6 @@ Return JSON ONLY:
     localStorage.setItem('linguaai_annotations', JSON.stringify(STATE.annotations));
 
     showAnnotationSentence(annotation);
-    updateStats();
     showToast('句子分析完成', 'info');
 
   } catch(e) {
@@ -1596,6 +2015,33 @@ function showAnnotationSentence(data) {
       </div>
     </div>
   `;
+}
+
+// ===== MANUAL INPUT SEARCH =====
+function toggleManualInput() {
+  const wrap = document.getElementById('manualInputWrap');
+  const input = document.getElementById('manualInput');
+  const isOpen = wrap.style.display !== 'none' && wrap.style.display !== '';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    input.placeholder = STATE.currentMode === 'sentence'
+      ? (uiLang === 'zh' ? '输入句子...' : 'Type a sentence...')
+      : (uiLang === 'zh' ? '输入单词...' : 'Type a word...');
+    input.value = '';
+    input.focus();
+  }
+}
+
+function submitManualSearch(text) {
+  text = text.trim();
+  if (!text) return;
+  document.getElementById('manualInputWrap').style.display = 'none';
+  clearAnnotation();
+  if (STATE.currentMode === 'sentence') {
+    analyzeSentenceLocal(text, null);
+  } else {
+    analyzeWordLocal(text, '', null);
+  }
 }
 
 function clearAnnotation() {
@@ -1741,11 +2187,11 @@ function saveToWordBook(data) {
     derivatives: data.derivatives || [],
     longSentences: data.longSentences || data.long_sentences || [],
     frequency: data.frequency || 3,
+    mastered: false,
     timestamp: Date.now()
   });
 
   localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
-  updateStats();
   showToast(`已添加到单词本: ${word}`, 'success');
 
   // Update button state if visible
@@ -1821,7 +2267,6 @@ function deleteWordBookItem(word) {
   STATE.wordBook = STATE.wordBook.filter(w => w.word !== word);
   localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
   renderWordBook();
-  updateStats();
   showToast(`已删除: ${word}`, 'info');
 }
 
@@ -1830,7 +2275,6 @@ function clearWordBook() {
   STATE.wordBook = [];
   localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
   renderWordBook();
-  updateStats();
   showToast('单词本已清空', 'info');
 }
 
@@ -1929,15 +2373,21 @@ function checkReviewAnswer() {
   reviewState.answered = true;
   if (isCorrect) {
     reviewState.correct++;
+    // Mark as mastered if no prior wrong record
+    const wbItem = STATE.wordBook.find(w => w.word === item.word);
+    if (wbItem && !wbItem.wrongCount) {
+      wbItem.mastered = true;
+      localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
+    }
   } else {
     reviewState.wrong++;
     if (!reviewState.wrongWords.find(w => w.word === item.word)) {
       reviewState.wrongWords.push(item);
     }
-    // Track wrong count in word book
     const wbItem = STATE.wordBook.find(w => w.word === item.word);
     if (wbItem) {
       wbItem.wrongCount = (wbItem.wrongCount || 0) + 1;
+      wbItem.mastered = false;
       localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
     }
   }
@@ -2011,7 +2461,7 @@ function finishReview() {
   } else {
     wrongList.innerHTML = '<span style="color:#10b981;font-weight:600">全部正确！🎉</span>';
   }
-  document.getElementById('reviewGenArticleBtn').style.display = reviewState.wrongWords.length > 0 ? '' : 'none';
+
 }
 
 function reviewWrongWords() {
@@ -2033,35 +2483,6 @@ function reviewWrongWords() {
 function endReview() {
   reviewState = null;
   document.getElementById('reviewModal').classList.remove('active');
-}
-
-async function generateReviewArticle() {
-  if (!reviewState || reviewState.wrongWords.length === 0) {
-    showToast('没有需要巩固的词汇', 'warning');
-    return;
-  }
-  endReview();
-
-  const words = reviewState.wrongWords.map(w => w.word);
-  const meanings = reviewState.wrongWords.map(w => w.word + ' (' + (w.meaning || '') + ')').join(', ');
-
-  const zhPrompt = '你是一位英语教育专家。请根据以下需要巩固的词汇列表，生成一篇有逻辑、符合常识的英语故事/文章。\n\n需要巩固的词汇（按错误频率排序）：\n' + meanings + '\n\n要求：\n1. 生成一篇约200-300词的英语故事\n2. 尽可能多地使用上述词汇（至少使用80%）\n3. 将上述词汇用**加粗**标记\n4. 词汇出现的位置要自然、符合语境\n5. 给出文章的标题\n6. 故事要有逻辑性、有趣且连贯\n7. 最后另起一行列出所有加粗词汇的中文释义对照表\n\n输出格式：\n- 第一行是文章标题（前面加# ）\n- 正文使用Markdown格式\n- 重点词汇用**加粗**';
-  const enPrompt = 'You are an English education expert. Generate a logical, coherent English story/article based on the following vocabulary list.\n\nWords to reinforce (sorted by error frequency):\n' + meanings + '\n\nRequirements:\n1. Generate a story of about 200-300 words\n2. Use at least 80% of the listed vocabulary\n3. Mark target words with **bold**\n4. Words should appear naturally and in context\n5. Include a title\n6. The story should be logical, interesting and coherent\n7. At the end, list all bold words with their English explanations\n\nOutput format:\n- First line is the title (prefix with # )\n- Use Markdown for body text\n- Target vocabulary with **bold**';
-  const prompt = uiLang === 'zh' ? zhPrompt : enPrompt;
-
-  showLoading('AI 正在生成巩固文章...');
-  try {
-    const content = await callLLM([
-      { role: 'system', content: '你是一个专业的英语教育内容生成助手。生成有逻辑的故事，自然融入目标词汇。' },
-      { role: 'user', content: prompt }
-    ], { temperature: 0.8, max_tokens: 4096 });
-    hideLoading();
-    renderArticle(content);
-    showToast('巩固文章已生成', 'success');
-  } catch(e) {
-    hideLoading();
-    showToast('生成失败: ' + e.message, 'error');
-  }
 }
 
 function exportWordBook(format) {
@@ -2090,6 +2511,40 @@ function exportWordBook(format) {
   downloadFile(content, filename, mimeType);
   showToast(`已导出: ${filename}`, 'success');
   hideExportModal();
+}
+
+function exportWordBookPDF() {
+  const words = STATE.wordBook;
+  if (words.length === 0) { showToast('生词本为空', 'warning'); return; }
+
+  // Build PDF HTML in dictionary style
+  const sorted = [...words].sort((a, b) => a.word.localeCompare(b.word));
+  const items = sorted.map(w => {
+    const eng = w.english ? `<div style="color:#64748b;font-size:13px;margin-top:2px">${w.english}</div>` : '';
+    const meta = [w.pos, w.phonetic ? '/' + w.phonetic + '/' : ''].filter(Boolean).join(' · ');
+    return `
+      <div style="padding:10px 0;border-bottom:1px solid #e2e8f0">
+        <div style="font-size:18px;font-weight:700;color:#0f172a">${w.word}</div>
+        ${meta ? `<div style="font-size:12px;color:#94a3b8;margin-top:2px">${meta}</div>` : ''}
+        <div style="font-size:15px;color:#2563eb;font-weight:500;margin-top:4px">${w.meaning}</div>
+        ${eng}
+      </div>`;
+  }).join('');
+
+  const html = `
+    <div style="font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;max-width:600px;margin:0 auto;padding:32px">
+      <h1 style="font-size:24px;text-align:center;color:#0f172a;margin-bottom:4px">📖 ${uiLang === 'zh' ? '生词本' : 'Vocabulary'}</h1>
+      <p style="text-align:center;color:#94a3b8;font-size:13px;margin-bottom:24px">${words.length} ${uiLang === 'zh' ? '个词' : 'words'}</p>
+      ${items}
+    </div>`;
+
+  const el = document.createElement('div');
+  el.innerHTML = html;
+  el.style.position = 'absolute'; el.style.left = '-9999px';
+  document.body.appendChild(el);
+
+  const opt = { margin: [15, 15], filename: 'vocabulary.pdf', html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+  html2pdf().set(opt).from(el).save().then(() => document.body.removeChild(el));
 }
 
 function exportAnnotations() {
@@ -2139,12 +2594,15 @@ function loadSentences() {
 
 function saveArticleToLocal() {
   const area = document.getElementById('articleArea');
-  localStorage.setItem('linguaai_article', area.innerHTML);
+  const html = area.innerHTML;
+  // Skip saving if content contains expired blob URL or PDF iframe
+  if (html.includes('blob:') || html.includes('<iframe')) return;
+  localStorage.setItem('linguaai_article', html);
 }
 
 function loadArticleFromLocal() {
   const saved = localStorage.getItem('linguaai_article');
-  if (saved) {
+  if (saved && !saved.includes('blob:') && !saved.includes('<iframe')) {
     document.getElementById('articleArea').innerHTML = saved;
     attachArticleDelegates();
     updateTokenTooltips();
@@ -2159,14 +2617,13 @@ function loadArticleFromLocal() {
     const domHighlighted = document.querySelectorAll('.token.highlighted');
     if (domHighlighted.length > 0 && !STATE.currentArticleId) {
       // Rebuild highlights data from DOM
-      STATE.highlights['_restored'] = STATE.highlights['_restored'] || [];
+      STATE.highlights['_restored'] = STATE.highlights['_restored'] || { color: '#2563eb', words: [] };
+      const restored = STATE.highlights['_restored'].words || STATE.highlights['_restored'];
       domHighlighted.forEach(t => {
         const w = t.dataset.word;
-        if (w && !STATE.highlights['_restored'].includes(w)) {
-          STATE.highlights['_restored'].push(w);
-        }
+        if (w && !restored.includes(w)) restored.push(w);
       });
-      if (STATE.highlights['_restored'].length > 0) {
+      if (restored.length > 0) {
         STATE.currentArticleId = '_restored';
         saveHighlights();
       }
@@ -2473,6 +2930,18 @@ function exportAllData() {
 //  HIGHLIGHT MODE
 // ============================================================
 
+function setHLColor(color) {
+  STATE.highlightColor = color;
+  document.getElementById('hlColorDot').style.background = color;
+  document.getElementById('hlColorPicker').style.display = 'none';
+}
+
+function toggleHLPicker(e) {
+  e.stopPropagation();
+  const p = document.getElementById('hlColorPicker');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
 function toggleHighlightMode() {
   STATE.highlightMode = !STATE.highlightMode;
   const btn = document.getElementById('highlightBtn');
@@ -2521,7 +2990,10 @@ function attachArticleDelegates() {
       const range = sel.getRangeAt(0);
       const allTokens = Array.from(text.querySelectorAll('.token'));
       const inRange = allTokens.filter(t => range.intersectsNode(t) && !t.classList.contains('highlighted'));
-      inRange.forEach(t => t.classList.add('highlighted'));
+      inRange.forEach(t => {
+        t.classList.add('highlighted');
+        t.style.setProperty('background', STATE.highlightColor, 'important');
+      });
       // Round corners: only the first and last get radius
       if (inRange.length === 1) {
         inRange[0].style.setProperty('border-radius', '4px', 'important');
@@ -2529,12 +3001,12 @@ function attachArticleDelegates() {
         inRange[0].style.setProperty('border-radius', '4px 0 0 4px', 'important');
         inRange[inRange.length - 1].style.setProperty('border-radius', '0 4px 4px 0', 'important');
       }
-      // Save words from data-word tokens
+      // Save words with color
       inRange.forEach(t => {
         const w = t.dataset.word;
         if (STATE.currentArticleId && w) {
-          if (!STATE.highlights[STATE.currentArticleId]) STATE.highlights[STATE.currentArticleId] = [];
-          if (!STATE.highlights[STATE.currentArticleId].includes(w)) STATE.highlights[STATE.currentArticleId].push(w);
+          if (!STATE.highlights[STATE.currentArticleId]) STATE.highlights[STATE.currentArticleId] = { color: STATE.highlightColor, words: [] };
+          if (!STATE.highlights[STATE.currentArticleId].words.includes(w)) STATE.highlights[STATE.currentArticleId].words.push(w);
         }
       });
       sel.removeAllRanges();
@@ -2569,27 +3041,22 @@ function toggleWordHighlight(element) {
 
   showToast('🎯 笔刷命中: ' + word, 'success');
 
-  // Always add highlight, never remove (brush paints, doesn't erase)
   const alreadyHighlighted = element.classList.contains('highlighted');
   if (alreadyHighlighted) return;
 
-  // DIRECT STYLE SET — bypasses any CSS specificity issues
-  element.style.setProperty('background', '#2563eb', 'important');
+  const color = STATE.highlightColor;
+  element.style.setProperty('background', color, 'important');
   element.style.setProperty('color', '#fff', 'important');
   element.style.setProperty('border-radius', '4px', 'important');
   element.classList.add('highlighted');
 
-  // Update highlights storage for current article
   if (STATE.currentArticleId) {
-    if (!STATE.highlights[STATE.currentArticleId]) {
-      STATE.highlights[STATE.currentArticleId] = [];
-    }
-    const hList = STATE.highlights[STATE.currentArticleId];
+    if (!STATE.highlights[STATE.currentArticleId]) STATE.highlights[STATE.currentArticleId] = { color, words: [] };
+    const hList = STATE.highlights[STATE.currentArticleId].words;
     if (!hList.includes(word)) hList.push(word);
 
-    // Also highlight all other tokens of the same word in the article
     document.querySelectorAll(`.token[data-word="${word}"]`).forEach(t => {
-      t.style.setProperty('background', '#2563eb', 'important');
+      t.style.setProperty('background', color, 'important');
       t.style.setProperty('color', '#fff', 'important');
       t.style.setProperty('border-radius', '4px', 'important');
       t.classList.add('highlighted');
@@ -2607,9 +3074,8 @@ function clearAllHighlights() {
     t.style.removeProperty('color');
     t.style.removeProperty('border-radius');
   });
-  // Clear stored highlights: try current article first, fallback to all
   if (STATE.currentArticleId && STATE.highlights[STATE.currentArticleId]) {
-    STATE.highlights[STATE.currentArticleId] = [];
+    STATE.highlights[STATE.currentArticleId] = { color: '#2563eb', words: [] };
   } else {
     STATE.highlights = {};
   }
@@ -2624,16 +3090,24 @@ function saveHighlights() {
 function loadHighlights() {
   try {
     const saved = localStorage.getItem('linguaai_highlights');
-    if (saved) STATE.highlights = JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      for (const key of Object.keys(parsed)) {
+        if (Array.isArray(parsed[key])) parsed[key] = { color: '#2563eb', words: parsed[key] };
+      }
+      STATE.highlights = parsed;
+    }
   } catch(e) {}
 }
 
 function applyHighlights(articleId) {
   if (!articleId || !STATE.highlights[articleId]) return;
-  const words = STATE.highlights[articleId];
+  const h = STATE.highlights[articleId];
+  const words = h.words || h;
+  const color = h.color || '#2563eb';
   words.forEach(w => {
     document.querySelectorAll(`.token[data-word="${w}"]`).forEach(t => {
-      t.style.setProperty('background', '#2563eb', 'important');
+      t.style.setProperty('background', color, 'important');
       t.style.setProperty('color', '#fff', 'important');
       t.style.setProperty('border-radius', '4px', 'important');
       t.classList.add('highlighted');
@@ -2785,20 +3259,6 @@ function showLoading(text, isAnnotation = false) {
 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.remove('active');
-}
-
-function updateStats() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const wordsToday = STATE.wordBook.filter(w => w.timestamp >= today.getTime()).length;
-  const annotationsToday = STATE.annotations.filter(a => a.timestamp >= today.getTime());
-  const phrasesToday = annotationsToday.filter(a => a.type === 'word' && a.text.includes(' ')).length;
-  const sentencesToday = annotationsToday.filter(a => a.type === 'sentence').length;
-
-  document.getElementById('todayWords').textContent = wordsToday;
-  document.getElementById('todayPhrases').textContent = phrasesToday;
-  document.getElementById('todaySentences').textContent = sentencesToday;
 }
 
 function formatDate(ts) {

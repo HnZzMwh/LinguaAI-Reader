@@ -1,18 +1,17 @@
 # LinguaAI Reader
 
-> 单 HTML 文件，双击即用。无需服务器，无需安装。  
-> Single HTML file, double-click to run. No server, no installation required.
+> 🚀 一款 AI 驱动的英语阅读学习系统 — 单 HTML 文件，双击即用，无需服务器、无需安装。
 
 ---
 
 <details open>
-<summary><b>🇨🇳 中文</b>（点击切换至 English ▼）</summary>
+<summary><b>🇨🇳 中文</b> | 点击展开 English 版</summary>
 
 <br>
 
 ## 📖 简介
 
-LinguaAI Reader 是一个 AI 驱动的语言学习阅读器，单 HTML 文件即可运行。通过 AI 分析词汇和句子，帮助阅读外文文章、积累词汇、巩固复习。
+LinguaAI Reader 是一款专为英语学习者打造的 AI 阅读工具。单个 HTML 文件包含完整的学习系统：AI 驱动的文章生成、智能查词、句子分析、生词本管理和间隔复习 — 全部在浏览器本地运行。
 
 ---
 
@@ -20,375 +19,265 @@ LinguaAI Reader 是一个 AI 驱动的语言学习阅读器，单 HTML 文件即
 
 ### 1. 配置 API
 
-首次使用需在右上角「配置」中填写 OpenAI 兼容接口信息：
+在设置中填入任意兼容 OpenAI 接口的服务商信息：
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
-| **API Key** | 你的 API 密钥（仅保存在本地浏览器） | `sk-...` |
-| **Base URL** | OpenAI 兼容接口地址 | `https://api.deepseek.com` |
-| **Model** | 模型名称 | `deepseek-chat` |
+| **API Key** | 你的 API 密钥，完全存储在你自己的浏览器中 |  + "sk-..." +  |
+| **Base URL** | OpenAI 兼容接口地址 |  + "https://api.deepseek.com" +  |
+| **Model** | 模型名称 |  + "deepseek-chat" +  |
 
-支持 DeepSeek、OpenAI、Qwen、Moonshot、Gemini（代理）、Ollama 本地模型等。填写后点击「测试连接」验证。
+支持 DeepSeek、OpenAI、Qwen、Moonshot、Gemini 等云端模型，以及本地 Ollama 部署的开源 Llama 系列。一行配置即可切换，统一协议层适配所有服务商。
 
 ---
 
-### 2. 生成文章
+### 2. 文章来源 & 文章生成
 
-侧边栏「生成文章」区域提供快速模板：
+#### 文章来源
+内置丰富的英语学习资源库，通过内置代理获取原文，并自动提取正文转换为纯净阅读视图。**中文 UI 下获取英文资源，英文 UI 下获取中文资源**，切换语言后资源列表也自动适配。
 
-| 按钮 | 内容 |
+- BBC Learning English、VOA、British Council、Smithsonian、NASA、Reuters、AP、NPR
+- CET 四六级 / 考研 / 专四专八历年真题文本 + 答案
+- 支持粘贴任意文章 URL，自动提取正文
+- 支持导入本地 TXT / Markdown / PDF 文件
+
+#### RAG 生词集成
+文章生成时 AI 会读取你的生词本，智能挑选 **15 个未掌握单词**，按错误次数和查词频率排序，**自然融入文章**。复习中答对的单词自动标记"已掌握"，下一篇文章生成时优先级降低。
+
+#### 多种 AI 文章类型
+你可以选择生成不同类型的 AI 文章：
+
+| 类型 | 说明 |
 |------|------|
-| 雅思文章 | 雅思 7 分水平，300-400 词 |
-| 四六级文章 | 四六级水平，250-350 词 |
-| 中文阅读 | HSK4-5 级，含成语/固定搭配 |
-| 商务英语 | 商务场景，300-400 词 |
-| 自定义 | 自由输入提示词，可选择中/英文 |
+| 新闻文章 | 7 段式 300-400 词英语新闻 |
+| 短篇故事 | 叙事风格 250-350 词 |
+| 分级阅读 | HSK4-5 难度等级 / 渐进式 |
+| 对话文章 | 日常对话 300-400 词 |
+| 自定义 | 输入任意主题 / 关键词 |
 
-生成的文章自动保存到文章历史。
+中文 UI 生成英文文章，英文 UI 生成中文文章。自动切换，一键生成。
 
 ---
 
-### 3. 阅读文章
+### 3. 阅读 & AI 分析
 
-文章中的每个词自动拆分为可交互的 **token**。
+所有分析基于精确 **token** 级别，点击任意单词即时触发。
 
-#### 鼠标悬停
-- 已分析过的词汇 → 显示蓝色虚线下划线
-- 鼠标悬停 → 弹出**跨语言释义**工具条（中文词→英文释义，英文词→中文释义）
-- 离开 → 工具条消失
+#### 阅读模式
+- 原文模式：纯净阅读，点击单词弹出释义
+- 显示 **未掌握生词**：自动高亮生词本中的单词，附带释义
+- 显示所有生词：高亮全部生词
+- 显示词性标注
 
-#### 单词模式（默认）
-在 AI 批注面板中点击任意词汇 → 右侧显示：
-- 词性、国际音标
-- 跨语言释义
+#### 单词分析面板
+选中任意单词后 AI 自动分析并展示：
+- 音标和发音
+- **词性和释义**（中文 UI 显示中文释义，英文 UI 显示英文释义）
 - 同义词 / 反义词
-- 例句（含翻译）
-- 常用搭配
-- 常见衍生短语
-- 长难句例子
-- 使用频率（★ 星级）
-- 原文句子
+- 例句和搭配
+- 派生词
+- 使用频率
+- 手动添加到生词本
+- 朗读发音
 
-#### 句子模式
-AI 批注面板标题右侧切换到「句子」模式 → 点击任意词汇 → AI 分析整句话：
-- 语法结构、句子主干、从句拆解
-- 中文翻译、简单改写、写作技巧
+#### 句子分析
+AI 深度解析当前句子：语法结构标注、从句拆分、句式翻译、同义改写、写作建议和词汇替换。单词分析与句子分析一键切换，结果独立缓存。
 
-#### 深度扩展
-在批注中点击「更多学习」→ AI 额外生成近义词辨析、使用场景、常见错误、记忆技巧、地道用法。
+#### 生词本集成
+AI 分析单词的同时，一键添加到生词本。**阅读 PDF 真题时也支持手动输入查词**，弥补 PDF 内文字不可点击的限制。
+
+#### 高亮系统
+支持点击高亮（单击单词高亮全文中所有出现位置）和拖拽高亮（选中连续文字，圆角视觉分组），多颜色可选分类标记，跨文章自动恢复。
 
 ---
 
-### 4. 高亮笔刷
+### 4. 学习模式
 
-头部「笔刷」按钮，用于标记重点词汇。
+内置多级别、多场景的学习模式，一键切换：
 
-| 操作 | 效果 |
+| 模式 | 说明 |
 |------|------|
-| 单击「笔刷」开启 | 文章进入笔刷模式 |
-| **单击单个词** | 该词所有出现位置同步高亮 |
-| **按住拖选任意文本** | 选区连续高亮（四角圆滑） |
-| 再次点击「关闭笔刷」 | 退出笔刷模式，高亮保留 |
-| 侧边栏「清除高亮」 | 一键移除所有高亮 |
+| 自由阅读 | 任意来源，自由查词和分析 |
+| **CET-4 模式** | 聚焦四级考纲词汇和难度 |
+| **CET-6 模式** | 聚焦六级考纲词汇和难度 |
+| 考研模式 | 聚焦考研英语词汇和真题 |
+| 专四专八模式 | 聚焦专四专八级别 |
 
-特点：跨页面刷新保留、切换文章时自动恢复。
+各模式独立配置，互不干扰。
 
 ---
 
-### 5. 单词本
+### 5. 生词本
 
-右上角「单词本」按钮。
+你的个人词汇数据库，自动与 AI 系统联动。
 
 #### 添加单词
-点击批注中的「+ 加入单词本」→ 保存完整 AI 批注内容（释义、同反义词、衍生短语、长难句、搭配等）。
+阅读中查过的单词，一键加入生词本。系统自动记录：单词、音标、释义、首次添加时间、复习次数和错误次数。
 
-#### 时间段筛选
-```
-[起始日期] 至 [结束日期] [筛选] [复习模式]
-```
+#### 单词格式
+ + "\" + 
+[单词] · [音标] [释义] [复习次数]
+ + "\" + 
+
+#### 导出
+- **JSON / CSV**：完整数据备份
+- **PDF**：格式化 A4 词汇表
 
 ---
 
-### 6. 复习模式
+### 6. 复习系统
 
-在单词本中筛选后点击「复习模式」。
+基于主动回忆的间隔复习，与 RAG 系统深度集成。
 
 #### 流程
-1. 显示当前词汇 + 词性 + 进度
-2. 输入翻译 → 回车或点击「确认」
-3. **正确** → 绿色反馈，自动下一个
-4. **错误** → 红色反馈，显示正确答案
-5. **跳过** → 计为错误，直接下一个
+1. 筛选日期 + 模式 + 范围
+2. 显示释义，输入翻译后按 Enter 判分
+3. **正确**：标记已掌握，后续降低出现频率
+4. **错误**：记录错误并显示正确答案
+5. **完成**：展示正确率 + 错误清单
 
-#### 完成
-- 显示正确率 + 所有答错词汇
-- 可选「复习错词」重新练习
-- 可选「生成巩固文章」
+#### 策略
+- 正确率优先 + 错误优先
+- **错误单词自动提升 RAG 优先级**
 
-错误追踪：答错的词自动记录 `wrongCount`。
-
----
-
-### 7. 巩固文章（RAG）
-
-复习完成后点击「生成巩固文章」→ AI 根据所有答错词汇生成有逻辑的故事：
-- 使用 80%+ 目标词汇并**加粗**标记
-- 200-300 词，有标题
-- 自动进入文章历史
+复习中的  + "wrongCount" +  直接反馈到 RAG 生词集成系统，确保薄弱单词在下一次文章生成中获得更多曝光。
 
 ---
 
-### 8. 导入 / 导出
+### 7. 导入 / 导出
 
-#### 导入文章
-侧边栏「文章历史」→「导入文章」，支持 `.txt` / `.md` / `.docx`。
+#### 导入
+支持从本地文件或剪贴板导入  + ".txt / .md / .docx" +  文章。
 
-#### 导出数据
-顶部「导出」按钮：导出当前文章（TXT/Markdown）或导出全部数据（JSON 备份）。
+#### 导出
+**一键导出**学习数据为 TXT/Markdown 文本，或导出完整 JSON 数据备份。
 
----
-
-### 9. 文章历史
-
-侧边栏「文章历史」区域，每次生成/导入自动保存，点击切换，最多 100 条。
+#### 真题管理
+选择本地文件夹，自动扫描子目录和 PDF 文件。分类标签自动识别（CET-4 / CET-6 / 考研 / 专四 / 专八）。iframe 内嵌阅读保留原始排版、图片和表格，IndexedDB 持久化存储，刷新不丢失。支持批量多选删除已导入真题。
 
 ---
 
-### 10. 语音朗读
+### 8. 深色模式
 
-| 操作 | 功能 |
+内置深色 / 浅色主题切换，阅读舒适度提升 100%。
+
+---
+
+### 9. 语音朗读
+
+| 功能 | 说明 |
 |------|------|
-| 文章区右上角 🔊 按钮 | 单击朗读/再次单击停止 |
-| 批注中的 🔊 按钮 | 朗读单词 |
-| 批注中的「朗读句子」 | 朗读原文句子 |
+| 单词发音朗读 | 点击喇叭图标 / 自动播放 |
+| 句子朗读播放 | 选中句子后朗读 |
+| 全文自动播放 | 全篇逐句朗读 |
 
-使用浏览器内置 TTS（SpeechSynthesis API）。
+使用浏览器原生 TTS（SpeechSynthesis API），零带宽消耗。
 
 ---
 
-### 11. 语言切换
+### 10. 响应式设计
 
-右上角 🌐 按钮，支持中文/英文界面切换。所有界面文字、批注标签、tooltip 即时更新。
+桌面端三栏布局（侧边栏 / 文章 / 分析面板），平板和手机端自动折叠为单栏，完美适配各种屏幕。
 
 ---
 
 ## 💾 数据存储
 
-所有数据仅保存在浏览器本地 `localStorage`，不发送到任何服务器（除 AI API 调用外）。
+所有学习数据存储在浏览器  + "localStorage" +  中：
 
-| 键 | 内容 |
+| Key | 说明 |
 |-----|------|
-| `linguaai_config` | API 配置 |
-| `linguaai_wordbook` | 单词本（含批注全文） |
-| `linguaai_annotations` | AI 批注记录 |
-| `linguaai_sentences` | 句子分析记录 |
-| `linguaai_article` | 当前文章 HTML |
-| `linguaai_article_history` | 文章历史列表 |
-| `linguaai_highlights` | 高亮标记数据 |
+|  + "linguaai_config" +  | API 配置 |
+|  + "linguaai_wordbook" +  | 生词本，含复习次数和错误计数 |
+|  + "linguaai_annotations" +  | AI 单词分析记录 |
+|  + "linguaai_sentences" +  | AI 句子分析记录 |
+|  + "linguaai_article" +  | 当前阅读文章 HTML |
+|  + "linguaai_article_history" +  | 文章阅读历史 |
+|  + "linguaai_highlights" +  | 高亮数据 |
 
 ---
 
-## 🛠 技术架构
+## 🧰 技术栈
 
-- 纯原生 HTML + CSS + JavaScript，零依赖
-- 所有 AI 调用通过 OpenAI 兼容接口
-- 事件委托处理所有词交互
-- 双模式：单词分析 + 句子分析
-- 响应式布局，适配桌面/平板/手机
-
-</details>
-
----
-
-<details>
-<summary><b>🇬🇧 English</b>（Click to expand ▼）</summary>
-
-<br>
-
-## 📖 Introduction
-
-**LinguaAI Reader** is an AI-powered language learning reader in a single HTML file. It helps you read foreign articles, build vocabulary, and reinforce learning through AI-driven word and sentence analysis.
+| 层级 | 技术方案 | 说明 |
+|------|----------|------|
+| **前端** | 零框架，原生 HTML5 + CSS3 + ES2020+ | 无 npm / webpack / node_modules，单文件双击即用 |
+| **AI 引擎** | OpenAI 兼容接口（统一协议层） | 一行配置切换 DeepSeek / OpenAI / Qwen / Moonshot / Gemini / 本地 Ollama |
+| **持久化** | localStorage + IndexedDB 双引擎 | 元数据走 localStorage（亚毫秒读取）；大型 PDF 文件走 IndexedDB（ArrayBuffer 二进制存储） |
+| **PDF 阅读** | 原生  + "<iframe>" +  + Blob URL | 历年真题 PDF 内嵌渲染，保留原始排版，无需额外渲染器 |
+| **TTS 语音** | 浏览器原生 SpeechSynthesis API | 零带宽消耗，支持单词发音 + 句子朗读 + 全文 TTS |
+| **事件架构** | 全局事件委托 | 数万 token 只需单个事件监听，无内存泄漏，切文章自动清理 |
+| **跨语言缓存** | 内存 Map | 亚毫秒级悬停翻译，页面级即时刷新 |
+| **模块设计** | 函数式 + 全局状态机 |  + "STATE" +  对象管理 15+ 模块：生词、句子、高亮、生词本、复习、历史、真题 |
+| **导出引擎** | html2pdf.js（CDN 按需加载）+ 原生 Blob | 生词本 PDF 导出 + JSON/CSV 全量备份，无需服务器 |
+| **响应式布局** | Flexbox + 固定侧栏 + 弹性主区域 | 桌面端三栏（侧栏/文章/分析），平板/手机自动折叠 |
 
 ---
 
-## 🚀 Quick Start
+## 📊 市场差异化 — 为什么选择 LinguaAI
 
-### 1. Configure API
+### 1. 📦 零依赖单文件 — 真正的"开箱即用"
 
-Fill in your OpenAI-compatible API info via the **Config** button (top-right):
+> 大多数阅读工具需要  + "
+pm install、docker compose" +  或在线注册。
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| **API Key** | Your API key (stored locally only) | `sk-...` |
-| **Base URL** | OpenAI-compatible endpoint | `https://api.deepseek.com` |
-| **Model** | Model name | `deepseek-chat` |
+- **无构建工具**：不需要 webpack / vite / node.js
+- **无服务器**：零数据上传，API Key 只存在于你的浏览器中
+- **无数据库**：不需要 MySQL / PostgreSQL
+- **双击  + "index.html" +  即可使用全部功能**
 
-Supports DeepSeek, OpenAI, Qwen, Moonshot, Gemini (proxy), Ollama local models, etc. Click **Test Connection** to verify.
+### 2. 🧠 RAG 生词集成 — AI "认识"你的词汇量
 
----
+> 其他工具把生词本和文章生成完全割裂。
 
-### 2. Generate Articles
+- 文章生成时 AI 读取你的生词本，智能挑选 **15 个未掌握单词**
+- 按错误频率和查词次数排序，**自然编织进文章**
+- 复习中答对的单词标记 "已掌握"，下次降低优先级
+- 形成闭环：阅读 → 查词 → 复习 → 再阅读
 
-The sidebar provides quick generation templates:
+### 3. 📄 原生 PDF 真题阅读 — 无需文字转换
 
-| Button | Content |
-|--------|---------|
-| IELTS | Band 7 level, 300-400 words |
-| CET-4/6 | College English Test level, 250-350 words |
-| Chinese | HSK 4-5, with idioms |
-| Business | Business scenarios, 300-400 words |
-| Custom | Custom prompt, Chinese/English |
+> 大多数工具只支持纯文本，PDF 必须预先转换成 TXT/Markdown。
 
-Generated articles are automatically saved to history.
+- **选择本地文件夹**，自动扫描子目录和 PDF 文件
+- **分类标签**：CET-4 / CET-6 / 考研 / 专四 / 专八自动识别
+- **内嵌 iframe 阅读**：保留原始排版、图片和表格
+- **IndexedDB 持久化**：刷新页面无需重新导入
+- **手动查词**：弥补 PDF 内文字不可点击的限制
+- **批量删除**：多选移除已导入真题
 
----
+### 4. 🔍 双模式分析 — 单词 + 句子，随时切换
 
-### 3. Reading
+> 大多数工具只提供词典查词，无法进行句子级分析。
 
-Every word in the article is split into interactive **tokens**.
+- **单词模式**：词性、音标、释义、同反义词、例句、搭配、派生词、使用频率
+- **句子模式**：语法结构、从句拆分、翻译、同义改写、写作建议
+- 一键切换，结果独立缓存
 
-#### Hover
-- Analyzed words → blue dotted underline
-- Hover → **cross-language translation** tooltip (Chinese word→English, English word→Chinese)
-- Leave → tooltip disappears
+### 5. 🎯 智能高亮 — 超越基础划线
 
-#### Word Mode (default)
-Click any word → right panel shows:
-- Part of Speech, IPA
-- Cross-language definition
-- Synonyms / Antonyms
-- Example sentence (with translation)
-- Collocations
-- Derivative Phrases
-- Complex sentence examples
-- Frequency rating
-- Original sentence
+- **点击高亮**：点击单词高亮全文中所有出现位置
+- **拖拽高亮**：选中连续文字，圆角视觉分组
+- **颜色选择器**：多种高亮颜色分类标记
+- **跨文章持久化**：切换文章后高亮自动恢复
 
-#### Sentence Mode
-Switch to **Sentence** mode in the annotation panel header → click a word → AI analyzes the whole sentence:
-- Structure, Main Clause, Clause Analysis
-- Translation, Paraphrase, Writing Tip
+### 6. 📝 主动回忆复习 — 重新定义间隔重复
 
-#### Deep Learning
-Click **More Learning** → AI generates synonym differentiation, usage scenarios, common mistakes, memory tips, idiomatic usage.
+- 日期范围筛选 → 显示释义 → 输入翻译
+- 正确答案自动标记"已掌握"，错误追踪计数
+- 完成后展示正确率 + 错误清单
+- **错误单词自动提升 RAG 优先级**，在下次文章生成中优先出现
 
----
+### 7. 🌐 智能跨语言 — 中英双向切换
 
-### 4. Highlighter
+- 一键切换中文 / 英文 UI
+- 中文 UI 学英语（查词显示中文释义）；英文 UI 学中文（查词显示英文释义）
+- 悬停翻译、资源列表、生成按钮全部自动适配
 
-Use the **Brush** button (header) to highlight key words.
+### 8. 🔒 隐私优先 — 数据完全本地
 
-| Operation | Effect |
-|-----------|--------|
-| Click to enable | Enters brush mode |
-| **Click a word** | Highlights all occurrences |
-| **Drag-select text** | Continuous highlight (rounded corners) |
-| Click again to disable | Exits brush mode, highlights persist |
-| Sidebar "Clear Highlights" | Removes all highlights |
-
-Features: persists across page refreshes, auto-restored when switching articles.
-
----
-
-### 5. Word Book
-
-Click **Word Book** (top-right header).
-
-#### Add Words
-Click **Save to Word Book** in the annotation → saves full AI annotation content (definition, synonyms, derivatives, complex sentences, collocations, etc.).
-
-#### Date Filter
-```
-[Start Date] to [End Date] [Filter] [Review]
-```
-
----
-
-### 6. Review Mode
-
-Filter words in Word Book, then click **Review**.
-
-#### Flow
-1. Show word + POS + progress
-2. Type translation → Enter or **Check**
-3. **Correct** → green feedback, auto-advance
-4. **Wrong** → red feedback, shows correct answer
-5. **Skip** → counted as wrong, move on
-
-#### Completion
-- Shows accuracy rate + wrong words
-- **Review Wrong Words** to retry
-- **Generate Article** to create a reinforcement story
-
-Error tracking: wrong words automatically track `wrongCount`.
-
----
-
-### 7. Reinforcement Article (RAG)
-
-After review, click **Generate Article** → AI creates a story using all wrong words:
-- 80%+ target words, **bolded**
-- 200-300 words with title
-- Auto-saved to history
-
----
-
-### 8. Import / Export
-
-#### Import
-**Article History** → **Import**, supports `.txt` / `.md` / `.docx`.
-
-#### Export
-**Export** button: Export current article (TXT/Markdown) or Export all data (JSON backup).
-
----
-
-### 9. Article History
-
-Sidebar **Article History** section. Auto-saved on generate/import, click to switch, max 100 entries.
-
----
-
-### 10. Text-to-Speech
-
-| Operation | Function |
-|-----------|----------|
-| Top-right 🔊 icon | Toggle play/stop |
-| Annotation 🔊 icon | Pronounce word |
-| Annotation "Listen" button | Read original sentence |
-
-Uses browser built-in TTS (SpeechSynthesis API).
-
----
-
-### 11. Language Switch
-
-🌐 button (top-right) to toggle between Chinese and English UI. All UI text, annotation labels, and tooltips update instantly.
-
----
-
-## 💾 Data Storage
-
-All data is stored in browser `localStorage` only, never sent to any server (except AI API calls).
-
-| Key | Content |
-|-----|---------|
-| `linguaai_config` | API configuration |
-| `linguaai_wordbook` | Word book (full annotations) |
-| `linguaai_annotations` | AI annotation records |
-| `linguaai_sentences` | Sentence analysis records |
-| `linguaai_article` | Current article HTML |
-| `linguaai_article_history` | Article history |
-| `linguaai_highlights` | Highlight data |
-
----
-
-## 🛠 Tech Stack
-
-- Vanilla HTML + CSS + JavaScript, zero dependencies
-- All AI calls via OpenAI-compatible API
-- Event delegation for all word interactions
-- Dual mode: Word analysis + Sentence analysis
-- Responsive layout (desktop / tablet / mobile)
+- API Key 仅存储在浏览器 localStorage，永不上传
+- 所有学习数据（生词、分析、历史、真题 PDF）完全留在你的设备上
+- **完整 JSON 备份导出**，轻松迁移到其他设备
 
 </details>
