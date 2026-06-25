@@ -1,760 +1,3326 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>试卷 OCR 格式保留工具</title>
-  <style>
-    /* ========== RESET & BASE ========== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 16px; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: #f0f4f9;
-      color: #0f172a;
-      min-height: 100vh;
-      line-height: 1.6;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguaAI Reader - AI 语言学习系统</title>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
-    /* ========== CONTAINER ========== */
-    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+<style>
+/* ========== RESET & BASE ========== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#f0f4f9;color:#0f172a;height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
-    /* ========== HEADER ========== */
-    .header {
-      background: #fff;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .header h1 {
-      font-size: 24px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-    }
-    .header p { color: #64748b; font-size: 14px; }
 
-    /* ========== CONFIG SECTION ========== */
-    .config-section {
-      background: #fff;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .config-section h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #0f172a;
-    }
-    .key-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .key-row label {
-      font-size: 14px;
-      color: #475569;
-      min-width: 180px;
-    }
-    .key-row input {
-      flex: 1;
-      min-width: 200px;
-      padding: 10px 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: border-color 0.2s;
-    }
-    .key-row input:focus {
-      outline: none;
-      border-color: #2563eb;
-    }
-    .key-row button {
-      padding: 10px 20px;
-      background: #2563eb;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .key-row button:hover { background: #1d4ed8; }
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 
-    /* ========== DROpzONE ========== */
-    .dropzone {
-      background: #fff;
-      border: 2px dashed #cbd5e1;
-      border-radius: 12px;
-      padding: 48px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .dropzone:hover, .dropzone.drag-over {
-      border-color: #2563eb;
-      background: #eff6ff;
-    }
-    .dropzone p {
-      font-size: 16px;
-      color: #64748b;
-      margin-bottom: 8px;
-    }
-    .dropzone .hint {
-      font-size: 13px;
-      color: #94a3b8;
-    }
-    .dropzone input { display: none; }
+/* ========== HEADER ========== */
+.header{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:32px;height:32px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px}
+.logo-text{font-size:20px;font-weight:700;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header-right{display:flex;align-items:center;gap:8px}
 
-    /* ========== ERROR MESSAGE ========== */
-    #errorMsg {
-      display: none;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 14px;
-    }
+/* ========== BUTTONS ========== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;line-height:1.4}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:#e2e8f0;color:#475569}
+.btn-secondary:hover{background:#cbd5e1}
+.btn-ghost{background:transparent;color:#64748b}
+.btn-ghost:hover{background:#f1f5f9;color:#0f172a}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-xs{padding:4px 8px;font-size:12px;border-radius:6px}
+.btn-danger{background:#ef4444;color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-icon{width:36px;height:36px;padding:0;border-radius:8px}
+.btn-outline{background:transparent;border:1.5px solid #e2e8f0;color:#475569}
+.btn-outline:hover{background:#f1f5f9;border-color:#2563eb;color:#2563eb}
 
-    /* ========== LOADING OVERLAY ========== */
-    #loadingOverlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
-    }
-    #loadingOverlay p {
-      color: #fff;
-      font-size: 18px;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* ========== MAIN LAYOUT ========== */
+.app-container{display:flex;flex:1;overflow:hidden}
+.sidebar{width:280px;min-width:280px;background:#fff;border-right:1px solid #e2e8f0;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.sidebar::-webkit-scrollbar{display:none}
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.annotation-panel{width:380px;min-width:380px;background:#fff;border-left:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden}
 
-    /* ========== RESULT SECTION ========== */
-    #resultSection { display: none; }
-    .result-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    #engineBadge {
-      font-size: 14px;
-      color: #64748b;
-      background: #f1f5f9;
-      padding: 6px 12px;
-      border-radius: 6px;
-    }
-    #copyBtn {
-      padding: 10px 20px;
-      background: #10b981;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #copyBtn:hover { background: #059669; }
+/* ========== SIDEBAR ========== */
+.sidebar-section{padding:16px;border-bottom:1px solid #e2e8f0}
+.sidebar-title{font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px}
+.sidebar-btns{display:flex;flex-direction:column;gap:6px}
+.sidebar-btns .btn{width:100%;text-align:left;justify-content:flex-start}
+#fetchSourceContainer{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
+.fetch-btn{padding:5px 8px;font-size:11px;line-height:1.3;white-space:normal;word-break:break-word;text-align:center}
+.exam-item:hover{background:#f1f5f9;border-color:#2563eb !important}
 
-    /* ========== COMPARE LAYOUT ========== */
-    .compare-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    @media (max-width: 900px) {
-      .compare-layout { grid-template-columns: 1fr; }
-    }
-    .panel {
-      background: #fff;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      min-height: 400px;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    .panel-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    #previewPanel img {
-      max-width: 100%;
-      border-radius: 8px;
-    }
-    .pdf-hint {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #64748b;
-      font-size: 14px;
-    }
+/* ========== ARTICLE TOOLBAR ========== */
+.toolbar{padding:12px 24px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar-group{display:flex;align-items:center;gap:6px}
+.toolbar-divider{width:1px;height:24px;background:#e2e8f0}
+.toolbar-label{font-size:13px;color:#94a3b8;font-weight:500}
+.toolbar-text{font-size:13px;color:#64748b}
 
-    /* ========== RESULT CONTENT STYLES ========== */
-    #resultPanel h1 {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 16px 0 12px;
-      color: #0f172a;
-    }
-    #resultPanel h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 14px 0 10px;
-      color: #1e293b;
-    }
-    #resultPanel h3 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 12px 0 8px;
-      color: #334155;
-    }
-    #resultPanel p {
-      margin: 8px 0;
-      line-height: 1.8;
-      color: #1e293b;
-    }
-    #resultPanel strong { font-weight: 700; }
-    #resultPanel em { font-style: italic; }
-    #resultPanel blockquote {
-      border-left: 3px solid #94a3b8;
-      padding-left: 16px;
-      margin: 12px 0;
-      color: #64748b;
-      font-style: italic;
-    }
-    #resultPanel .option {
-      padding-left: 2em;
-      margin: 4px 0;
-      font-family: 'Courier New', monospace;
-      color: #334155;
-    }
-    #resultPanel hr.page-break {
-      border: none;
-      border-top: 2px dashed #cbd5e1;
-      margin: 24px 0;
-    }
-    #resultPanel .blank {
-      display: inline-block;
-      border-bottom: 1px solid #334155;
-      min-width: 80px;
-      margin: 0 4px;
-    }
+/* ========== ARTICLE AREA ========== */
+.article-area{flex:1;overflow-y:auto;padding:32px 48px;background:#fff}
+.tts-toggle-btn{position:absolute;top:12px;right:16px;z-index:10;width:36px;height:36px;border:none;background:#f1f5f9;border-radius:50%;cursor:pointer;color:#475569;display:flex;align-items:center;justify-content:center;transition:all 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.tts-toggle-btn:hover{background:#2563eb;color:#fff;box-shadow:0 4px 12px rgba(37,99,235,0.3)}
+.tts-toggle-btn.playing{background:#2563eb;color:#fff;box-shadow:0 4px 12px rgba(37,99,235,0.3)}
+.article-area:empty::after{content:'生成或导入一篇文章开始学习';display:flex;align-items:center;justify-content:center;height:100%;font-size:18px;color:#94a3b8;font-weight:500}
+.article-title{font-size:24px;font-weight:700;margin-bottom:20px;color:#0f172a;line-height:1.3}
+.article-text{font-size:16px;line-height:2;color:#1e293b;text-align:justify}
+.article-text .token{display:inline;cursor:pointer;border-radius:2px;transition:all 0.15s;padding:1px 0;position:relative}
+.article-text .token:hover{background:#dbeafe;color:#1d4ed8}
+.article-text .token.active{background:#eff6ff;color:#1d4ed8;font-weight:600}
+.article-text .token.annotated{border-bottom:2px solid #2563eb}
+.article-text .token.annotated:hover{background:#dbeafe}
+.article-text .token.token-space,.article-text .token.punct{cursor:default}
+.article-text .token.token-space:hover,.article-text .token.punct:hover{background:transparent !important;outline:none !important}
+.article-text .token.token-space{color:transparent !important}
 
-    /* ========== TOAST ========== */
-    #toast {
-      display: none;
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #0f172a;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
+/* ========== ANNOTATION PANEL ========== */
+.annotation-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.annotation-header h3{font-size:16px;font-weight:600}
+.annotation-body{flex:1;overflow-y:auto;padding:20px;scrollbar-width:none;-ms-overflow-style:none}
+.annotation-body::-webkit-scrollbar{display:none}
+.annotation-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:#94a3b8;gap:12px}
+.annotation-empty svg{width:48px;height:48px;opacity:0.4}
 
-    /* ========== SCROLLBAR ========== */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  </style>
+/* ========== ANNOTATION CARD ========== */
+.ann-card{animation:fadeSlideIn 0.3s ease}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ann-word{font-size:22px;font-weight:700;color:#0f172a;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.ann-word .sound-btn{width:28px;height:28px;border:none;background:#eff6ff;border-radius:6px;cursor:pointer;color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s}
+.ann-word .sound-btn:hover{background:#dbeafe}
+.ann-phonetic{font-size:14px;color:#64748b;font-style:italic;margin-bottom:12px}
+.ann-section{margin-bottom:12px}
+.ann-label{font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.ann-content{font-size:14px;color:#334155;line-height:1.6}
+.ann-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.ann-tag{display:inline-block;padding:2px 8px;background:#f0f4ff;color:#2563eb;border-radius:4px;font-size:12px}
+.ann-divider{height:1px;background:#e2e8f0;margin:12px 0}
+.ann-freq{display:flex;gap:2px;margin-top:4px}
+.ann-freq-star{color:#f59e0b;font-size:14px}
+.ann-freq-star.empty{color:#e2e8f0}
+.ann-actions{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.ann-save-btn{padding:6px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;transition:all 0.2s}
+.ann-save-btn:hover{background:#1d4ed8}
+.ann-save-btn.saved{background:#10b981}
+.ann-save-btn.saved:hover{background:#059669}
+.ann-more-btn{padding:6px 14px;background:#f1f5f9;color:#475569;border:none;border-radius:6px;font-size:13px;cursor:pointer;transition:all 0.2s}
+.ann-more-btn:hover{background:#e2e8f0}
+.ann-tts-btn{padding:6px 14px;background:#f0f4ff;color:#2563eb;border:none;border-radius:6px;font-size:13px;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:4px}
+.ann-tts-btn:hover{background:#dbeafe}
+
+/* ========== SENTENCE ANALYSIS ========== */
+.sent-card{animation:fadeSlideIn 0.3s ease;margin-top:12px;border:1px solid #e2e8f0;border-radius:10px;padding:16px;background:#f8fafc}
+.sent-card .sent-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sent-card .sent-label{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.3px;margin-top:8px;margin-bottom:2px}
+.sent-card .sent-content{font-size:14px;color:#334155;line-height:1.6;margin-bottom:4px}
+.sent-card .sent-original{font-size:14px;color:#64748b;font-style:italic;padding:8px 12px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:8px}
+
+/* ========== MODAL ========== */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:200;display:none;align-items:center;justify-content:center;animation:fadeIn 0.2s ease}
+.modal-overlay.active{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:16px;width:520px;max-width:90vw;max-height:85vh;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);animation:modalSlideIn 0.3s ease}
+@keyframes modalSlideIn{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-header{padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.modal-header h2{font-size:18px;font-weight:600}
+.modal-close{width:28px;height:28px;border:none;background:#f1f5f9;border-radius:6px;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.modal-close:hover{background:#e2e8f0;color:#0f172a}
+.modal-body{padding:24px;overflow-y:auto;max-height:calc(85vh - 140px)}
+.modal-footer{padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px}
+
+/* ========== FORM ========== */
+.form-group{margin-bottom:16px}
+.form-group:last-child{margin-bottom:0}
+.form-label{display:block;font-size:14px;font-weight:500;color:#334155;margin-bottom:6px}
+.form-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;color:#0f172a;background:#fff;transition:all 0.2s;outline:none;font-family:inherit}
+.form-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.form-input::placeholder{color:#94a3b8}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8.825L1.175 4l.825-.825L6 7.175 9.175 3.175 10 4z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.form-hint{font-size:12px;color:#94a3b8;margin-top:4px}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+
+/* ========== TOAST ========== */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:10px;font-size:14px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:toastIn 0.3s ease;display:flex;align-items:center;gap:8px;max-width:360px}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast-success{background:#10b981}
+.toast-error{background:#ef4444}
+.toast-info{background:#2563eb}
+.toast-warning{background:#f59e0b}
+
+/* ========== LOADING ========== */
+.loading-overlay{display:none;position:absolute;inset:0;background:rgba(255,255,255,0.85);z-index:50;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-overlay.active{display:flex}
+.loading-spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#64748b}
+
+/* ========== WORD BOOK MODAL ========== */
+.wb-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.wb-stats{display:flex;gap:16px}
+.wb-stat{text-align:center}
+.wb-stat-num{font-size:24px;font-weight:700;color:#2563eb}
+.wb-stat-label{font-size:12px;color:#64748b}
+.wb-list{list-style:none}
+.wb-item{padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s}
+.wb-item:hover{background:#f8fafc;border-color:#2563eb}
+.wb-item-word{font-weight:600;font-size:15px;color:#0f172a}
+.wb-item-meaning{font-size:13px;color:#64748b;margin-top:2px}
+.wb-item-date{font-size:11px;color:#94a3b8}
+.wb-item-right{text-align:right}
+.wb-item-delete{color:#94a3b8;cursor:pointer;padding:4px;border:none;background:none;font-size:14px;transition:color 0.2s}
+.wb-item-delete:hover{color:#ef4444}
+.wb-export-btns{display:flex;gap:8px;margin-bottom:16px}
+
+/* ========== MAIN CONTENT ========== */
+.main-content{position:relative;flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:1200px){
+  .annotation-panel{width:340px;min-width:340px}
+  .article-area{padding:24px 32px}
+}
+@media(max-width:900px){
+  .sidebar{width:240px;min-width:240px}
+  .annotation-panel{width:300px;min-width:300px}
+  .article-area{padding:20px 24px}
+}
+@media(max-width:768px){
+  .header{padding:0 16px}
+  .logo-text{display:none}
+  .app-container{flex-direction:column}
+  .sidebar{width:100%;min-width:unset;border-right:none;border-bottom:1px solid #e2e8f0;flex-direction:row;overflow-x:auto;padding:8px 16px}
+  .sidebar-section{border-bottom:none;padding:0}
+  .sidebar-title{display:none}
+  .sidebar-btns{flex-direction:row;gap:4px;white-space:nowrap}
+  .sidebar-btns .btn{width:auto;padding:6px 12px;font-size:12px}
+  .main-area{flex:1}
+  .annotation-panel{width:100%;min-width:unset;border-left:none;border-top:1px solid #e2e8f0;max-height:45vh}
+  .toolbar{padding:8px 16px;gap:6px}
+  .article-area{padding:16px}
+  .modal{width:95vw}
+  .header-right .btn span{display:none}
+}
+@media(max-width:480px){
+  .article-text{font-size:15px;line-height:1.8}
+  .article-area{padding:12px}
+  .toolbar-group .btn{font-size:12px;padding:4px 8px}
+}
+
+/* ========== SENTENCE HIGHLIGHT ========== */
+.article-text .sentence-active{background:#fef9c3;border-radius:2px}
+
+/* ========== LOADING SHIMMER ========== */
+.shimmer{background:linear-gradient(90deg,#f0f4f9 25%,#e2e8f0 50%,#f0f4f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ========== EMPTY STATE ========== */
+.empty-state{text-align:center;padding:40px}
+.empty-state svg{width:64px;height:64px;color:#cbd5e1;margin-bottom:16px}
+.empty-state h3{font-size:18px;color:#64748b;margin-bottom:8px;font-weight:500}
+.empty-state p{font-size:14px;color:#94a3b8;line-height:1.6}
+
+/* ========== CUSTOM PROMPT ========== */
+.custom-prompt-area{display:none}
+.custom-prompt-area.visible{display:block}
+
+/* ========== HOVER TRANSLATE TOOLTIP ========== */
+.translate-tooltip{position:fixed;z-index:500;background:#0f172a;color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;line-height:1.5;max-width:280px;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:tooltipFadeIn 0.15s ease;display:none}
+.translate-tooltip::after{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid #0f172a}
+@keyframes tooltipFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.translate-tooltip .tt-word{font-weight:600;margin-right:6px}
+.translate-tooltip .tt-meaning{color:#93c5fd}
+.article-text .token.has-translation{border-bottom:1.5px dashed #93c5fd;cursor:help}
+
+/* ========== HIGHLIGHT MODE ========== */
+.highlight-active{user-select:text !important;-webkit-user-select:text !important}
+.highlight-active .article-text .token{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='28' viewBox='0 0 20 28'%3E%3Crect x='2' y='2' width='16' height='24' rx='3' fill='%232563eb' opacity='0.8'/%3E%3C/svg%3E") 4 24,pointer !important}
+.highlight-active .token:not(.token-space):not(.punct):hover{outline:2px solid #2563eb;outline-offset:0;border-radius:3px;filter:brightness(1.05)}
+.article-text .token.highlighted{color:#fff !important;border-radius:0 !important;box-shadow:none !important}
+.article-text .token.token-space.highlighted{color:transparent !important}
+#highlightBtn.active{background:#2563eb;color:#fff}
+#highlightBtn.active svg{stroke:#fff}
+</style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <h1>试卷 OCR 格式保留工具</h1>
-      <p>上传 PDF 或图片，自动识别文字并还原段落结构、格式层级、选项缩进</p>
-    </div>
-
-    <!-- API Key 配置区 -->
-    <div class="config-section">
-      <h2>API 配置</h2>
-      <div class="key-row">
-        <label>Mistral API Key（首选）</label>
-        <input id="mistralKey" type="password" placeholder="输入 Mistral API Key">
-        <button id="saveMistralKey">保存</button>
-      </div>
-      <div class="key-row">
-        <label>通义千问 API Key（次选）</label>
-        <input id="qwenKey" type="password" placeholder="输入 DashScope API Key">
-        <button id="saveQwenKey">保存</button>
-      </div>
-    </div>
-
-    <!-- 上传区 -->
-    <div id="dropzone">
-      <input id="fileInput" type="file" accept=".pdf,image/*">
-      <p>拖拽或点击上传 PDF / 图片</p>
-      <span class="hint">支持 PDF、PNG、JPG、JPEG、WEBP，最大 20MB</span>
-    </div>
-
-    <!-- 错误提示 -->
-    <div id="errorMsg"></div>
-
-    <!-- 结果区 -->
-    <section id="resultSection">
-      <div class="result-header">
-        <span id="engineBadge"></span>
-        <button id="copyBtn">复制 Markdown</button>
-      </div>
-
-      <div class="compare-layout">
-        <!-- 左：原文件预览 -->
-        <div class="panel">
-          <div class="panel-title">原文件预览</div>
-          <div id="previewPanel"></div>
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">L</div>
+    <span class="logo-text">LinguaAI Reader</span>
+  </div>
+  <div class="header-right">
+        <div style="position:relative;display:inline-block">
+          <button class="btn btn-ghost btn-sm" id="highlightBtn" onclick="toggleHighlightMode()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4l-3-3-10 10z"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"/></svg>
+            <span data-i18n="brushLabel">笔刷</span>
+            <span id="hlColorDot" onclick="toggleHLPicker(event)" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#2563eb;margin-left:4px;vertical-align:middle;cursor:pointer;border:2px solid #e2e8f0"></span>
+          </button>
+          <div id="hlColorPicker" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);white-space:nowrap"></div>
         </div>
+    <button class="btn btn-ghost btn-sm" onclick="showWordBook()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+      <span data-i18n="wbTitle">单词本</span>
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="showExportModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span data-i18n="exportTitle">导出</span>
+    </button>
+    <button class="btn btn-ghost btn-sm" id="langBtn" onclick="toggleLanguage()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span id="langLabel">中</span>
+    </button>
+    <div class="toolbar-divider"></div>
+    <button class="btn btn-primary btn-sm" onclick="showConfigModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <span data-i18n="configTitle">配置</span>
+    </button>
+  </div>
+</header>
 
-        <!-- 右：识别结果 -->
-        <div class="panel">
-          <div class="panel-title">识别结果（Markdown 渲染）</div>
-          <div id="resultPanel"></div>
-        </div>
+<!-- ===== APP CONTAINER ===== -->
+<div class="app-container">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title" data-i18n="fetchTitle">学习资源</div>
+      <div id="fetchSourceContainer"></div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:8px" data-i18n="fetchHint">点击网站跳转，自行选取文章后导入</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title" data-i18n="genTitle">生成文章</div>
+      <div class="sidebar-btns" id="genButtonContainer"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title" data-i18n="shortcutTitle">快捷操作</div>
+      <div class="sidebar-btns">
+        <button class="btn btn-ghost btn-sm" onclick="scrollToTop()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+          <span data-i18n="scrollTop">回到顶部</span>
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="clearArticle()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span data-i18n="clearArticle">清空文章</span>
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="clearAllHighlights()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span data-i18n="clearHighlight">清除高亮</span>
+        </button>
       </div>
-    </section>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title" data-i18n="historyTitle">文章历史</div>
+      <button class="btn btn-outline btn-sm" onclick="importArticle()" style="width:100%;margin-bottom:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span data-i18n="importBtn">导入文章</span>
+      </button>
+      <div id="articleHistoryList" style="display:flex;flex-direction:column;gap:4px">
+        <div style="text-align:center;color:#94a3b8;font-size:12px;padding:16px 0"><span data-i18n="historyEmpty">暂无文章历史</span></div>
+      </div>
+    </div>
+<input type="file" id="importFileInput" accept=".txt,.md,.docx" style="display:none" onchange="handleImportFile(event)">
+  </aside>
+
+  <!-- ===== MAIN AREA ===== -->
+  <div class="main-area">
+    <!-- Article Area -->
+    <div class="main-content">
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">AI 正在生成文章...</div>
+      </div>
+      <button id="ttsBtn" class="tts-toggle-btn" onclick="toggleArticleTTS()" title="朗读/停止">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+      <div class="article-area" id="articleArea"></div>
+    </div>
   </div>
 
-  <!-- Loading 遮罩 -->
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <p>识别中，请稍候...</p>
+  <!-- ===== ANNOTATION PANEL ===== -->
+  <div class="annotation-panel" id="annotationPanel">
+    <div class="annotation-header">
+      <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span data-i18n="annTitle">AI 批注</span>
+      </h3>
+      <div style="display:flex;align-items:center;gap:4px">
+        <div id="manualInputWrap" style="display:none;position:relative">
+          <input id="manualInput" type="text" placeholder="" style="width:120px;padding:4px 8px;font-size:12px;border:1.5px solid #2563eb;border-radius:6px;outline:none" autocomplete="off">
+        </div>
+        <button class="btn btn-sm btn-ghost" id="manualSearchBtn" onclick="toggleManualInput()" style="padding:4px 6px" title="输入查询">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button class="btn btn-sm btn-primary" id="modeWord" onclick="setMode('word')" style="padding:4px 10px;font-size:12px"><span data-i18n="modeWord">单词</span></button>
+        <button class="btn btn-sm btn-secondary" id="modeSentence" onclick="setMode('sentence')" style="padding:4px 10px;font-size:12px"><span data-i18n="modeSentence">句子</span></button>
+      </div>
+    </div>
+    <div class="annotation-body" id="annotationBody">
+      <div class="annotation-empty" id="annotationEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <p data-i18n="annEmpty">点击文章中的单词查看 AI 批注</p>
+        <p style="font-size:13px" data-i18n="annEmptySent">切换"句子"模式可分析长难句</p>
+      </div>
+      <div id="annotationContent"></div>
+    </div>
   </div>
+</div>
 
-  <!-- Toast 提示 -->
-  <div id="toast"></div>
+<!-- ===== CONFIG MODAL ===== -->
+<div class="modal-overlay" id="configModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><span data-i18n="configTitle">模型配置</span></h2>
+      <button class="modal-close" onclick="hideConfigModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" data-i18n="configApiKey">API Key</label>
+        <input class="form-input" id="apiKey" type="password" placeholder="sk-..." autocomplete="off" data-i18n-placeholder="configApiKeyPlaceholder">
+        <div class="form-hint" data-i18n="configApiKeyHint">你的 API 密钥，仅保存在本地浏览器</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="configBaseUrl">Base URL</label>
+        <input class="form-input" id="baseUrl" type="url" placeholder="https://api.deepseek.com" data-i18n-placeholder="configBaseUrlPlaceholder">
+        <div class="form-hint" data-i18n="configBaseUrlHint">OpenAI 兼容接口地址，例如 api.deepseek.com</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="configModel">Model</label>
+        <input class="form-input" id="model" type="text" placeholder="deepseek-chat" data-i18n-placeholder="configModelPlaceholder">
+        <div class="form-hint" data-i18n="configModelHint">模型名称，例如 deepseek-chat, gpt-4o-mini, qwen-plus</div>
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <button class="btn btn-primary" onclick="testConnection()" style="width:100%">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span data-i18n="configTest">测试连接</span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideConfigModal()"><span data-i18n="configCancel">取消</span></button>
+      <button class="btn btn-primary" onclick="saveConfig()"><span data-i18n="configSave">保存配置</span></button>
+    </div>
+  </div>
+</div>
 
-  <script>
-    /* ========== CONFIG ========== */
-    const CONFIG = {
-      // 首选：Mistral OCR
-      MISTRAL: {
-        apiKey: '',
-        endpoint: 'https://api.mistral.ai/v1/ocr',
-        model: 'mistral-ocr-latest',
-      },
+<!-- ===== WORD BOOK MODAL ===== -->
+<div class="modal-overlay" id="wordBookModal">
+  <div class="modal" style="width:580px">
+    <div class="modal-header">
+      <h2>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+        <span data-i18n="wbTitle">生词本</span>
+      </h2>
+      <button class="modal-close" onclick="hideWordBook()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="wordBookBody">
+      <div class="wb-header">
+        <div class="wb-stats">
+          <div class="wb-stat">
+            <div class="wb-stat-num" id="wbTotal">0</div>
+            <div class="wb-stat-label" data-i18n="wbTotal">总计</div>
+          </div>
+          <div class="wb-stat">
+            <div class="wb-stat-num" id="wbToday">0</div>
+            <div class="wb-stat-label" data-i18n="wbToday">今日</div>
+          </div>
+        </div>
+        <div class="wb-export-btns">
+          <button class="btn btn-sm btn-outline" onclick="exportWordBook('json')">JSON</button>
+          <button class="btn btn-sm btn-outline" onclick="exportWordBook('csv')">CSV</button>
+          <button class="btn btn-sm btn-outline" onclick="exportWordBookPDF()">PDF</button>
+          <button class="btn btn-sm btn-danger" onclick="clearWordBook()"><span data-i18n="wbClear">清空</span></button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <input type="date" id="wbDateFrom" class="form-input" style="width:auto;flex:1;min-width:120px;padding:6px 10px;font-size:13px">
+        <span style="color:#94a3b8" data-i18n="wbDateToLabel">至</span>
+        <input type="date" id="wbDateTo" class="form-input" style="width:auto;flex:1;min-width:120px;padding:6px 10px;font-size:13px">
+        <button class="btn btn-sm btn-secondary" onclick="filterWordBook()"><span data-i18n="wbFilter">筛选</span></button>
+        <button class="btn btn-sm btn-primary" onclick="startReview()"><span data-i18n="wbReview">复习模式</span></button>
+      </div>
+      <div id="wordBookList">
+        <p style="text-align:center;color:#94a3b8;padding:40px 0" data-i18n="wbEmpty">暂无记录，点击文章中的单词添加</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-      // 次选：通义千问VL
-      QWEN: {
-        apiKey: '',
-        endpoint: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
-        model: 'qwen-vl-max',
-      },
+<!-- ===== REVIEW MODAL ===== -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <h2>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span data-i18n="reviewTitle">单词复习</span>
+      </h2>
+      <button class="modal-close" onclick="endReview()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="reviewBody" style="text-align:center;padding:40px 24px">
+      <div id="reviewProgress" style="font-size:13px;color:#94a3b8;margin-bottom:16px"></div>
+      <div id="reviewWord" style="font-size:32px;font-weight:700;color:#0f172a;margin-bottom:8px"></div>
+      <div id="reviewPos" style="font-size:14px;color:#94a3b8;margin-bottom:24px"></div>
+      <input type="text" id="reviewInput" class="form-input" placeholder="输入翻译..." data-i18n-placeholder="reviewInputPlaceholder" style="text-align:center;font-size:18px;padding:14px" autocomplete="off">
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+        <button class="btn btn-primary" onclick="checkReviewAnswer()" id="reviewCheckBtn" data-i18n="reviewConfirm">确认</button>
+        <button class="btn btn-secondary" onclick="skipReviewWord()" data-i18n="reviewSkip">跳过</button>
+      </div>
+      <div id="reviewFeedback" style="margin-top:16px;font-size:15px;min-height:30px"></div>
+      <div id="reviewResult" style="margin-top:24px;display:none;text-align:center">
+        <div style="font-size:56px;font-weight:800;color:#2563eb;line-height:1.2" id="reviewScore"></div>
+        <div style="font-size:15px;color:#64748b;margin-top:2px;letter-spacing:2px" data-i18n="reviewScore">正确率</div>
+        <div id="reviewWrongList" style="margin-top:16px;text-align:left"></div>
+        <button class="btn btn-primary" onclick="reviewWrongWords()" style="margin-top:12px" id="reviewRetryBtn"><span data-i18n="reviewRetry">复习错词</span></button>
+        <button class="btn btn-secondary" onclick="endReview()" style="margin-top:8px"><span data-i18n="reviewDone">完成</span></button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      // OCR 格式保留提示词
-      SYSTEM_PROMPT: `你是一个专业的试卷文档格式还原专家。
-请严格按照以下规则输出 Markdown：
+<!-- ===== EXPORT MODAL ===== -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-header">
+      <h2><span data-i18n="exportTitle">导出数据</span></h2>
+      <button class="modal-close" onclick="hideExportModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#64748b;margin-bottom:16px;font-weight:600;font-size:14px" data-i18n="exportCurrent">当前文章</p>
+      <button class="btn btn-outline" onclick="exportCurrentArticle('txt')" style="width:100%;margin-bottom:8px;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span data-i18n="exportCurrentTxt">导出当前文章 (TXT)</span>
+      </button>
+      <button class="btn btn-outline" onclick="exportCurrentArticle('md')" style="width:100%;margin-bottom:12px;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span data-i18n="exportCurrentMd">导出当前文章 (Markdown)</span>
+      </button>
+      <div style="height:1px;background:#e2e8f0;margin:12px 0"></div>
+      <p style="color:#64748b;margin-bottom:12px;font-weight:600;font-size:14px" data-i18n="exportAll">全部数据</p>
+      <button class="btn btn-primary" onclick="exportAllData()" style="width:100%;margin-bottom:8px;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 15 21 21 3 21 3 15"/><rect x="3" y="9" width="18" height="6" rx="1"/><line x1="12" y1="3" x2="12" y2="13"/><polyline points="9 10 12 13 15 10"/></svg>
+        <span data-i18n="exportAllData">导出全部数据</span>
+      </button>
+      <p style="font-size:12px;color:#94a3b8;margin-top:4px" data-i18n="exportDesc">包含：单词本 + AI 批注 + 文章历史</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideExportModal()"><span data-i18n="exportClose">关闭</span></button>
+    </div>
+  </div>
+</div>
 
-【结构识别规则】
-1. 大标题（如"2024年英语试卷"）→ 用 # 标题
-2. 大题题号（如"一、听力理解"）→ 用 ## 二级标题
-3. 小题题干（如"1. What did the man say?"）→ 普通段落，题号加粗 **1.**
-4. 选项 A B C D → 每个选项单独一行，前面加4个空格缩进，绝对不能用标题格式
-5. 填空题下划线 → 用 ___ 表示
-6. 加粗文字 → 用 **文字** 保留
-7. 首行缩进段落 → 段落开头加 &emsp;&emsp;
-8. 听力原文/注释 → 用 > 引用块
+<!-- ===== CUSTOM PROMPT MODAL ===== -->
+<div class="modal-overlay" id="customPromptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><span data-i18n="genCustom">自定义生成</span></h2>
+      <button class="modal-close" onclick="hideCustomPromptModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" data-i18n="customPromptLabel">生成提示词</label>
+        <textarea class="form-input" id="customPromptInput" rows="5" placeholder="例如：生成一篇关于气候变化的托福文章，300词，包含10个学术词汇" data-i18n-placeholder="customPromptPlaceholder" style="resize:vertical;font-family:inherit"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="customLangLabel">语言</label>
+        <select class="form-input form-select" id="customPromptLang">
+          <option value="en" data-i18n="langEn">英文</option>
+          <option value="zh" data-i18n="langZh">中文</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="generateCustomArticle()" style="width:100%" data-i18n="customGenerate">生成</button>
+    </div>
+  </div>
+</div>
 
-【禁止行为】
-- 禁止把 A、B、C、D 选项识别为标题
-- 禁止改变题目顺序
-- 禁止合并不同题目的段落
-- 禁止添加原文没有的内容
+<!-- ===== EXAM PAPERS MODAL ===== -->
+<div class="modal-overlay" id="examModal">
+  <div class="modal" style="width:500px">
+    <div class="modal-header">
+      <h2><span data-i18n="examTitle">历年真题</span></h2>
+      <button class="modal-close" onclick="hideExamModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="examList" style="padding:20px 24px;text-align:center;color:#94a3b8">
+      <p>首次使用请选择真题文件夹根目录</p>
+      <button class="btn btn-primary" onclick="showExamPapers()" style="margin-top:12px">📁 选择文件夹</button>
+    </div>
+  </div>
+</div>
 
-只输出 Markdown，不要任何解释。`,
-    };
+<!-- ===== TOAST ===== -->
+<div class="toast-container" id="toastContainer"></div>
 
-    /* ========== FileHandler ========== */
-    const FileHandler = {
+<!-- ===== HOVER TRANSLATE TOOLTIP ===== -->
+<div class="translate-tooltip" id="translateTooltip">
+  <span class="tt-word" id="ttWord"></span>
+  <span class="tt-meaning" id="ttMeaning"></span>
+</div>
 
-      /**
-       * 将文件转为 base64 字符串
-       * @param {File} file
-       * @returns {Promise<{base64: string, mimeType: string}>}
-       */
-      async toBase64(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = reader.result;
-            const base64 = result.split(',')[1];
-            resolve({ base64, mimeType: file.type });
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
+<script>
+// ============================================================
+//  LinguaAI Reader — 完整 JavaScript 逻辑
+// ============================================================
+
+// ===== GLOBAL STATE =====
+const STATE = {
+  config: { apiKey: '', baseUrl: '', model: '' },
+  annotations: [],       // { id, text, pos, chinese, phonetic, synonyms, antonyms, example, frequency, sentence, saved, timestamp }
+  wordBook: [],          // { word, meaning, pos, sentence, timestamp }
+  sentences: [],         // { text, analysis, timestamp }
+  articleHistory: [],    // { id, title, content, type, timestamp }
+  highlights: {},        // { articleId: { color:'#...', words:[wordLower, ...] } }
+  articleText: '',
+  currentArticleId: null,
+  highlightMode: false,
+  highlightColor: '#2563eb',
+  currentMode: 'word',   // 'word' | 'sentence'
+  isSpeaking: false,
+  speechSynth: window.speechSynthesis,
+};
+
+// ===== LANGUAGE SYSTEM =====
+// uiLang: 'zh' = Chinese UI (explains English to Chinese learners)
+//         'en' = English UI (explains Chinese to English learners)
+const LANG = {
+  zh: {
+    label: '中', annotationWord: '词性', annotationChinese: '中文释义', annotationContext: '上下文含义',
+    annotationSynonyms: '同义词', annotationAntonyms: '反义词', annotationExample: '例句',
+    annotationCollocations: '常用搭配', annotationDerivatives: '常见衍生短语', annotationLongSentences: '长难句例子',
+    annotationFrequency: '使用频率', annotationSentence: '原文句子', annotationMore: '更多学习',
+    annotationSave: '+ 加入生词本', annotationSaved: '✓ 已保存', annotationListen: '朗读句子',
+    annotationDeepTitle: '深度扩展',
+    sentTitle: '长难句分析', sentTranslation: '中文翻译', sentMain: '句子主干',
+    sentStructure: '语法结构', sentClause: '从句分析', sentGrammar: '语法要点',
+    sentParaphrase: '简单改写', sentWriting: '写作技巧',
+    brushOn: '笔刷已开启，点击任意单词即可标记', brushOff: '关闭笔刷',
+    brushLabel: '笔刷', highlightCleared: '已清除全部高亮',
+    aiAnalyzing: 'AI 正在分析词汇...', aiSentAnalyzing: 'AI 正在分析句子...',
+    aiMoreLearning: '正在获取更多学习内容...', aiParseError: '无法解析 AI 返回的 JSON 格式',
+
+    aiExplainLang: '中文', aiExplainPrompt: '请用中文解释',
+    wbTitle: '生词本', wbTotal: '总计', wbToday: '今日', wbEmpty: '暂无记录', wbClear: '清空',
+    reviewTitle: '单词复习', reviewProgress: '复习完成', reviewScore: '正确率',
+    reviewCorrect: '✓ 正确', reviewWrong: '✗ 错误', reviewAnswer: '正确答案',
+    reviewAllCorrect: '全部正确！🎉', reviewRetry: '复习错词',
+    reviewDone: '完成', reviewConfirm: '确认', reviewNext: '下一个', reviewSkip: '跳过',
+    reviewInputPlaceholder: '输入中文翻译...',
+    exportTitle: '导出数据', exportCurrent: '当前文章', exportAll: '全部数据',
+    importBtn: '导入文章', historyTitle: '文章历史', historyEmpty: '暂无文章历史',
+    shortcutTitle: '快捷操作', scrollTop: '回到顶部', clearArticle: '清空文章',
+    clearHighlight: '清除高亮',
+    genIelts: '雅思文章', genCet: '四六级文章', genChinese: '中文阅读', genBusiness: '商务英语',
+    genCustom: '自定义', genTitle: '生成文章',
+    fetchTitle: '学习资源', fetchHint: '点击网站跳转，自行选取文章后导入',
+    examTitle: '历年真题',
+    customPromptLabel: '生成提示词', customPromptPlaceholder: '例如：生成一篇关于气候变化的托福文章，300词，包含10个学术词汇',
+    customLangLabel: '语言', langEn: '英文', langZh: '中文', customGenerate: '生成',
+    modeWord: '单词', modeSentence: '句子', modeLabel: '模式',
+    configTitle: '模型配置', configSave: '保存配置', configCancel: '取消',
+    configTest: '测试连接', configApiKey: 'API Key', configBaseUrl: 'Base URL', configModel: 'Model',
+    configApiKeyHint: '你的 API 密钥，仅保存在本地浏览器', configBaseUrlHint: 'OpenAI 兼容接口地址，例如 api.deepseek.com',
+    configModelHint: '模型名称，例如 deepseek-chat, gpt-4o-mini, qwen-plus',
+    configApiKeyPlaceholder: 'sk-...', configBaseUrlPlaceholder: 'https://api.deepseek.com', configModelPlaceholder: 'deepseek-chat',
+    ttsPlay: '朗读', ttsStop: '停止',
+    wordCount: '已学', wordCountLabel: '词汇量：',
+    annTitle: 'AI 解析',
+    annEmpty: '点击文章中的单词查看 AI 解析', annEmptySent: '切换"句子"模式可分析长难句',
+    brushActive: '笔刷已开启', brushInactive: '笔刷',
+    wbFilter: '筛选', wbReview: '复习模式', wbDateToLabel: '至',
+    analysisFailed: '分析失败', apiConfigIncomplete: '配置不完整',
+    modeWordTip: '点击查看词汇批注', modeSentTip: '点击分析此句',
+    exportCurrentTxt: '导出当前文章 (TXT)', exportCurrentMd: '导出当前文章 (Markdown)',
+    exportAllData: '导出全部数据', exportDesc: '包含：生词本 + AI 解析 + 文章历史',
+    exportClose: '关闭',
+    pos: '词性', chinese: '中文释义', englishMeaning: '英文释义', context: '上下文含义',
+    synonyms: '同义词', antonyms: '反义词', example: '例句', collocations: '常用搭配',
+    derivatives: '常见衍生短语', longSentences: '长难句例子', frequency: '使用频率',
+    originalSentence: '原文句子', moreLearning: '更多学习',
+    addWordBook: '+ 加入单词本', listenSentence: '朗读句子',
+    sheetAnalysis: '长难句分析', sheetTranslation: '中文翻译', sheetMain: '句子主干',
+    sheetStructure: '语法结构', sheetClause: '从句分析', sheetGrammar: '语法要点',
+    sheetParaphrase: '简单改写', sheetWritingTip: '写作技巧',
+  },
+  en: {
+    label: 'EN', annotationWord: 'Part of Speech', annotationChinese: 'Definition',
+    annotationContext: 'Context Meaning', annotationSynonyms: 'Synonyms', annotationAntonyms: 'Antonyms',
+    annotationExample: 'Example', annotationCollocations: 'Collocations',
+    annotationDerivatives: 'Derivative Phrases', annotationLongSentences: 'Sentence Examples',
+    annotationFrequency: 'Frequency', annotationSentence: 'Original Sentence', annotationMore: 'More Learning',
+    annotationSave: '+ Save to Word Book', annotationSaved: '✓ Saved', annotationListen: 'Listen',
+    annotationDeepTitle: 'Deep Learning',
+    sentTitle: 'Sentence Analysis', sentTranslation: 'Translation', sentMain: 'Main Clause',
+    sentStructure: 'Structure', sentClause: 'Clause Analysis', sentGrammar: 'Grammar Points',
+    sentParaphrase: 'Paraphrase', sentWriting: 'Writing Tip',
+    brushOn: 'Highlighter on — click any word to mark', brushOff: 'Turn Off',
+    brushLabel: 'Brush', highlightCleared: 'All highlights cleared',
+    aiAnalyzing: 'AI is analyzing...', aiSentAnalyzing: 'AI is analyzing the sentence...',
+    aiMoreLearning: 'Getting more learning content...', aiParseError: 'Could not parse AI JSON response',
+
+    aiExplainLang: 'English', aiExplainPrompt: 'Explain in English',
+    wbTitle: 'Word Book', wbTotal: 'Total', wbToday: 'Today', wbEmpty: 'No records yet', wbClear: 'Clear',
+    reviewTitle: 'Review', reviewProgress: 'Review Complete', reviewScore: 'Accuracy',
+    reviewCorrect: '✓ Correct', reviewWrong: '✗ Wrong', reviewAnswer: 'Answer',
+    reviewAllCorrect: 'All correct! 🎉', reviewRetry: 'Review Wrong Words',
+    reviewDone: 'Done', reviewConfirm: 'Check', reviewNext: 'Next', reviewSkip: 'Skip',
+    reviewInputPlaceholder: 'Type the translation...',
+    exportTitle: 'Export', exportCurrent: 'Current Article', exportAll: 'All Data',
+    importBtn: 'Import', historyTitle: 'History', historyEmpty: 'No articles yet',
+    shortcutTitle: 'Quick Actions', scrollTop: 'Scroll to Top', clearArticle: 'Clear Article',
+    clearHighlight: 'Clear Highlights',
+    genIelts: 'IELTS', genCet: 'CET-4/6', genChinese: 'Chinese', genBusiness: 'Business',
+    genCustom: 'Custom', genTitle: 'Generate',
+    fetchTitle: 'Resources', fetchHint: 'Visit sites to find articles, then import',
+    examTitle: 'Past Exam Papers',
+    customPromptLabel: 'Prompt', customPromptPlaceholder: 'e.g. Generate a TOEFL article about climate change, 300 words, 10 academic terms',
+    customLangLabel: 'Language', langEn: 'English', langZh: 'Chinese', customGenerate: 'Generate',
+    modeWord: 'Word', modeSentence: 'Sentence', modeLabel: 'Mode',
+    configTitle: 'Settings', configSave: 'Save', configCancel: 'Cancel',
+    configTest: 'Test', configApiKey: 'API Key', configBaseUrl: 'Base URL', configModel: 'Model',
+    configApiKeyHint: 'Your API key, stored locally only', configBaseUrlHint: 'OpenAI-compatible API base URL, e.g. api.deepseek.com',
+    configModelHint: 'Model name, e.g. deepseek-chat, gpt-4o-mini, qwen-plus',
+    configApiKeyPlaceholder: 'sk-...', configBaseUrlPlaceholder: 'https://api.deepseek.com', configModelPlaceholder: 'deepseek-chat',
+    ttsPlay: 'Play', ttsStop: 'Stop',
+    wordCount: 'learned', wordCountLabel: 'Words:',
+    annTitle: 'AI Analysis',
+    annEmpty: 'Click a word for AI analysis', annEmptySent: 'Switch to "Sentence" mode for complex sentences',
+    brushActive: 'Highlighter on', brushInactive: 'Brush',
+    wbFilter: 'Filter', wbReview: 'Review', wbDateToLabel: 'to',
+    analysisFailed: 'Analysis failed', apiConfigIncomplete: 'Configuration incomplete',
+    modeWordTip: 'Click to analyze word', modeSentTip: 'Click to analyze sentence',
+    exportCurrentTxt: 'Export Article (TXT)', exportCurrentMd: 'Export Article (Markdown)',
+    exportAllData: 'Export All Data', exportDesc: 'Includes: Vocab + AI Analysis + History',
+    exportClose: 'Close',
+    pos: 'Part of Speech', chinese: 'Definition', englishMeaning: 'English', context: 'Context Meaning',
+    synonyms: 'Synonyms', antonyms: 'Antonyms', example: 'Example', collocations: 'Collocations',
+    derivatives: 'Derivative Phrases', longSentences: 'Sentence Examples', frequency: 'Frequency',
+    originalSentence: 'Original Sentence', moreLearning: 'More Learning',
+    addWordBook: '+ Save to Vocab', listenSentence: 'Listen',
+    sheetAnalysis: 'Sentence Analysis', sheetTranslation: 'Translation', sheetMain: 'Main Clause',
+    sheetStructure: 'Structure', sheetClause: 'Clause Analysis', sheetGrammar: 'Grammar Points',
+    sheetParaphrase: 'Paraphrase', sheetWritingTip: 'Writing Tip',
+  }
+};
+
+let uiLang = localStorage.getItem('linguaai_lang') || 'zh';
+let lastAnnotationData = null;
+let lastAnnotationType = null; // 'word' or 'sentence'
+
+function t(key) {
+  try { return (LANG[uiLang] && LANG[uiLang][key]) || (LANG.zh && LANG.zh[key]) || key; }
+  catch(e) { return key; }
+}
+
+function toggleLanguage() {
+  uiLang = uiLang === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('linguaai_lang', uiLang);
+  applyLanguage();
+  // Re-render current annotation if visible
+  const annContent = document.getElementById('annotationContent');
+  if (annContent && annContent.style.display !== 'none' && annContent.querySelector('.ann-card, .sent-card') && lastAnnotationData) {
+    if (lastAnnotationType === 'sentence') showAnnotationSentence(lastAnnotationData);
+    else showAnnotationWord(lastAnnotationData);
+  }
+}
+
+function applyLanguage() {
+  try {
+    document.getElementById('langLabel').textContent = t('label');
+    document.title = uiLang === 'zh' ? 'LinguaAI Reader - AI 语言学习系统' : 'LinguaAI Reader - AI Language Learning System';
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (key) el.textContent = t(key);
+    });
+    // Update placeholder texts with data-i18n-placeholder attribute
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (key) el.placeholder = t(key);
+    });
+    // Update TTS button title
+    const ttsBtn = document.getElementById('ttsBtn');
+    if (ttsBtn) ttsBtn.title = t('ttsPlay') + '/' + t('ttsStop');
+    // Re-render dynamic sidebar sections for current language
+    renderGenButtons();
+    renderResources();
+  } catch(e) { console.warn('applyLanguage error:', e); }
+}
+
+// ===== HOVER TRANSLATION CACHE =====
+// word_lowercase -> cross_language_translation
+let translationCache = {};
+function getCrossTranslation(annotation) {
+  const isChinese = /[\u4e00-\u9fff]/.test(annotation.text);
+  return isChinese ? (annotation.english || annotation.chinese) : annotation.chinese;
+}
+// Pre-populate cache from existing annotations
+function rebuildTranslationCache() {
+  translationCache = {};
+  STATE.annotations.forEach(a => {
+    if (a.type === 'word' && a.text && a.chinese) {
+      translationCache[a.text.toLowerCase()] = getCrossTranslation(a);
+    }
+  });
+}
+
+// ===== HOVER TRANSLATE TOOLTIP =====
+function showWordTranslation(element) {
+  const word = element.dataset.word;
+  if (!word) return;
+  const translation = translationCache[word];
+  if (!translation) return;
+  const tooltip = document.getElementById('translateTooltip');
+  document.getElementById('ttWord').textContent = element.textContent;
+  document.getElementById('ttMeaning').textContent = translation;
+  // Position below the word
+  const rect = element.getBoundingClientRect();
+  tooltip.style.display = 'block';
+  tooltip.style.left = Math.max(8, Math.min(rect.left + rect.width / 2 - 60, window.innerWidth - 200)) + 'px';
+  tooltip.style.top = (rect.bottom + 8) + 'px';
+}
+function hideTranslateTooltip() {
+  document.getElementById('translateTooltip').style.display = 'none';
+}
+function updateTokenTranslationUI(wordText) {
+  const lower = wordText.toLowerCase();
+  const tokens = document.querySelectorAll(`.token[data-word="${lower}"]`);
+  tokens.forEach(t => t.classList.add('has-translation'));
+}
+
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  loadWordBook();
+  loadAnnotations();
+  loadSentences();
+  loadArticleHistory();
+  loadHighlights();
+  rebuildTranslationCache();
+  applyLanguage();
+  // Build color picker
+  const picker = document.getElementById('hlColorPicker');
+  if (picker) {
+    const colors = ['#2563eb','#ef4444','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+    colors.forEach(c => {
+      const el = document.createElement('div');
+      el.style.cssText = 'width:20px;height:20px;border-radius:4px;background:' + c + ';cursor:pointer;display:inline-block;margin:2px;border:2px solid transparent';
+      el.onclick = function(e) { setHLColor(c); e.stopPropagation(); };
+      el.onmouseover = function() { el.style.borderColor = '#cbd5e1'; };
+      el.onmouseout = function() { el.style.borderColor = 'transparent'; };
+      picker.appendChild(el);
+    });
+  }
+  // Manual input Enter/Escape
+  document.getElementById('manualInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitManualSearch(this.value);
+    if (e.key === 'Escape') document.getElementById('manualInputWrap').style.display = 'none';
+  });
+  // Close color picker on outside click
+  document.addEventListener('click', function(e) {
+    const p = document.getElementById('hlColorPicker');
+    if (p && !e.target.closest('#hlColorPicker') && !e.target.closest('#hlColorDot')) {
+      p.style.display = 'none';
+    }
+  });
+});
+
+// ============================================================
+//  CONFIGURATION
+// ============================================================
+
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem('linguaai_config');
+    if (saved) {
+      STATE.config = JSON.parse(saved);
+      document.getElementById('apiKey').value = STATE.config.apiKey || '';
+      document.getElementById('baseUrl').value = STATE.config.baseUrl || 'https://api.deepseek.com';
+      document.getElementById('model').value = STATE.config.model || 'deepseek-chat';
+    } else {
+      document.getElementById('baseUrl').value = 'https://api.deepseek.com';
+      document.getElementById('model').value = 'deepseek-chat';
+    }
+  } catch(e) {
+    console.warn('Config load error:', e);
+  }
+}
+
+function saveConfig() {
+  let baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/+$/, '');
+  if (baseUrl && !/^https?:\/\//i.test(baseUrl)) {
+    baseUrl = 'https://' + baseUrl;
+  }
+  STATE.config = {
+    apiKey: document.getElementById('apiKey').value.trim(),
+    baseUrl: baseUrl,
+    model: document.getElementById('model').value.trim(),
+  };
+  localStorage.setItem('linguaai_config', JSON.stringify(STATE.config));
+  hideConfigModal();
+  showToast('配置已保存', 'success');
+}
+
+function getConfig() {
+  if (!STATE.config.apiKey) {
+    showToast('请先配置 API Key', 'warning');
+    showConfigModal();
+    return null;
+  }
+  if (!STATE.config.baseUrl) {
+    showToast('请配置 Base URL', 'warning');
+    showConfigModal();
+    return null;
+  }
+  if (!STATE.config.model) {
+    showToast('请配置 Model', 'warning');
+    showConfigModal();
+    return null;
+  }
+  return STATE.config;
+}
+
+function showConfigModal() {
+  document.getElementById('configModal').classList.add('active');
+  document.getElementById('apiKey').focus();
+}
+
+function hideConfigModal() {
+  document.getElementById('configModal').classList.remove('active');
+}
+
+async function testConnection() {
+  let baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/+$/, '');
+  if (baseUrl && !/^https?:\/\//i.test(baseUrl)) {
+    baseUrl = 'https://' + baseUrl;
+  }
+  const cfg = {
+    apiKey: document.getElementById('apiKey').value.trim(),
+    baseUrl: baseUrl,
+    model: document.getElementById('model').value.trim(),
+  };
+  if (!cfg.apiKey) { showToast('请输入 API Key', 'warning'); return; }
+  if (!cfg.baseUrl) { showToast('请输入 Base URL', 'warning'); return; }
+  if (!cfg.model) { showToast('请输入 Model', 'warning'); return; }
+
+  showToast('正在测试连接...', 'info');
+  try {
+    const resp = await fetch(`${cfg.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` },
+      body: JSON.stringify({ model: cfg.model, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 })
+    });
+    if (resp.ok) {
+      showToast('连接成功！', 'success');
+    } else {
+      const err = await resp.json().catch(() => ({}));
+      showToast(`连接失败: ${err.error?.message || resp.statusText}`, 'error');
+    }
+  } catch(e) {
+    showToast(`连接失败: ${e.message}`, 'error');
+  }
+}
+
+// ============================================================
+//  LLM CALL
+// ============================================================
+
+async function callLLM(messages, options = {}) {
+  const cfg = getConfig();
+  if (!cfg) throw new Error('配置不完整');
+
+  const resp = await fetch(`${cfg.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${cfg.apiKey}`
+    },
+    body: JSON.stringify({
+      model: cfg.model,
+      messages: messages,
+      temperature: options.temperature ?? 0.3,
+      max_tokens: options.max_tokens ?? 4096,
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${resp.status}: ${resp.statusText}`);
+  }
+
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ============================================================
+//  ARTICLE GENERATION
+// ============================================================
+
+const ARTICLE_PROMPTS = {
+  ielts: `你是一位雅思写作专家。请生成一篇雅思7分水平的英语文章，满足以下要求：
+
+1. 主题随机（科技、环境、教育、社会等雅思常见话题）
+2. 字数约300-400词
+3. 包含15-20个雅思高频学术词汇（用**加粗**标记）
+4. 包含3-5个复杂从句（定语从句、状语从句、名词性从句等）
+5. 给出文章的标题
+
+输出格式：
+- 第一行是文章标题（前面加# ）
+- 正文使用Markdown格式
+- 学术词汇用**加粗**
+- 最后空一行后，列出所有加粗词汇的中文释义对照表`,
+
+  cet: `你是一位英语教育专家。请生成一篇大学英语四六级水平的英语文章，满足以下要求：
+
+1. 主题随机（社会热点、科技、文化、教育等）
+2. 字数约250-350词
+3. 包含12-15个四六级核心词汇（用**加粗**标记）
+4. 包含2-3个长难句
+5. 难度适中，适合四六级备考
+
+输出格式：
+- 第一行是文章标题（前面加# ）
+- 正文使用Markdown格式
+- 核心词汇用**加粗**
+- 最后空一行后，列出所有加粗词汇的中文释义`,
+
+  chinese: `你是一位中文教育专家。请生成一篇适合中文学习者的阅读文章，满足以下要求：
+
+1. 主题随机（中国文化、历史、美食、旅游等）
+2. 字数约300-400字
+3. 使用HSK4-5级词汇为主
+4. 包含5-8个成语或固定搭配（用**加粗**标记）
+5. 语言自然流畅，内容有趣
+
+输出格式：
+- 第一行是文章标题（前面加# ）
+- 正文使用Markdown格式
+- 重点词汇用**加粗**
+- 最后空一行后，列出所有加粗词汇的拼音和英文释义`,
+
+  business: `你是一位商务英语专家。请生成一篇商务英语文章，满足以下要求：
+
+1. 主题随机（市场营销、管理、金融、国际贸易、创业等）
+2. 字数约300-400词
+3. 包含15-20个商务英语核心词汇（用**加粗**标记）
+4. 包含3-4个实用商务句型
+5. 内容实用且具现实参考价值
+
+输出格式：
+- 第一行是文章标题（前面加# ）
+- 正文使用Markdown格式
+- 商务词汇用**加粗**
+- 最后空一行后，列出所有加粗词汇的中文释义`
+};
+
+async function generateArticle(type) {
+  const basePrompt = ARTICLE_PROMPTS[type];
+  if (!basePrompt) return;
+
+  // RAG: select up to 15 unmastered words, prioritize by wrongCount + rarity
+  let vocabPrompt = basePrompt;
+  const candidates = STATE.wordBook
+    .filter(w => w.word && !w.mastered)
+    .sort((a, b) => (b.wrongCount || 0) - (a.wrongCount || 0) || (b.frequency || 3) - (a.frequency || 3))
+    .slice(0, 15);
+  if (candidates.length > 0) {
+    const sample = candidates.map(w => w.word).join('、');
+    vocabPrompt += `\n\n【词汇要求】请在下文中尽量自然地融入以下生词（若不合适可跳过）：${sample}`;
+  }
+
+  showLoading(`AI 正在生成${getArticleTypeName(type)}...`);
+  clearAnnotation();
+
+  try {
+    const content = await callLLM([
+      { role: 'system', content: '你是一个专业的语言学习内容生成助手。请严格按照用户要求的格式输出。不要输出多余的解释。' },
+      { role: 'user', content: vocabPrompt }
+    ], { temperature: 0.8, max_tokens: 4096 });
+
+    hideLoading();
+    renderArticle(content);
+    showToast(`${getArticleTypeName(type)}生成成功`, 'success');
+  } catch(e) {
+    hideLoading();
+    showToast(`生成失败: ${e.message}`, 'error');
+  }
+}
+
+function getArticleTypeName(type) {
+  const names = { ielts: '雅思文章', cet: '四六级文章', chinese: '中文阅读', business: '商务英语' };
+  return names[type] || '文章';
+}
+
+// ===== GENERATE BUTTONS (dynamic by language) =====
+const GEN_LAYOUTS = {
+  zh: ['ielts', 'cet', 'business', 'custom'],
+  en: ['chinese', 'custom'],
+};
+const GEN_BTN_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
+
+// ===== EXAM PAPERS (IndexedDB persistent storage) =====
+let examPapersCache = {};
+let activeExamCat = '';
+let examDB = null;
+let examDeleteMode = false;
+let examSelectedForDelete = new Set();
+
+function openExamDB() {
+  return new Promise(resolve => {
+    if (examDB) return resolve(examDB);
+    const req = indexedDB.open('LinguaAI_Exam', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('pdfs', { keyPath: 'path' });
+    req.onsuccess = e => { examDB = e.target.result; resolve(examDB); };
+    req.onerror = () => resolve(null);
+  });
+}
+
+async function loadExamFromDB() {
+  const db = await openExamDB();
+  if (!db) return;
+  const metaRaw = localStorage.getItem('linguaai_exam_meta');
+  if (!metaRaw) return;
+  const meta = JSON.parse(metaRaw);
+  examPapersCache = {};
+  for (const cat of Object.keys(meta)) {
+    examPapersCache[cat] = [];
+    for (const f of meta[cat]) {
+      const path = cat + '/' + (f.sub ? f.sub + '/' : '') + f.name;
+      examPapersCache[cat].push({ name: f.name, sub: f.sub, path, blob: null });
+    }
+  }
+  // Try to load blobs from IndexedDB
+  for (const cat of Object.keys(examPapersCache)) {
+    for (const f of examPapersCache[cat]) {
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const tx = db.transaction('pdfs', 'readonly');
+          const req = tx.objectStore('pdfs').get(f.path);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = reject;
         });
-      },
+        if (result) {
+          // Reconstruct Blob from stored ArrayBuffer (more reliable than storing Blob directly)
+          if (result.blob) {
+            f.blob = result.blob;
+          } else if (result.data) {
+            f.blob = new Blob([result.data], { type: 'application/pdf' });
+          }
+        }
+      } catch(e) { console.warn('IndexedDB read failed:', f.path, e); }
+    }
+  }
+  if (!activeExamCat) activeExamCat = Object.keys(examPapersCache).sort()[0];
+}
 
-      /**
-       * 判断文件类型
-       * @param {File} file
-       * @returns {'pdf' | 'image' | 'unsupported'}
-       */
-      getFileType(file) {
-        if (file.type === 'application/pdf') return 'pdf';
-        if (file.type.startsWith('image/')) return 'image';
-        return 'unsupported';
-      },
+async function pickExamFolder() {
+  const picker = document.createElement('input');
+  picker.type = 'file';
+  picker.webkitdirectory = true;
+  picker.onchange = async function(e) {
+    const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    if (files.length === 0) { showToast('未找到 PDF 文件', 'warning'); return; }
+    const db = await openExamDB();
+    for (const f of files) {
+      const parts = f.webkitRelativePath.split('/');
+      const name = parts.pop();
+      const cat = parts.length > 0 ? parts[0] : '其他';
+      const sub = parts.length > 1 ? parts[1] : '';
+      const path = f.webkitRelativePath;
+      if (examPapersCache[cat]?.some(x => x.path === path)) continue;
+      const arrayBuf = await f.arrayBuffer();
+      const blob = new Blob([arrayBuf], { type: 'application/pdf' });
+      if (!examPapersCache[cat]) examPapersCache[cat] = [];
+      examPapersCache[cat].push({ name, sub, path, blob });
+      // Persist to IndexedDB (store ArrayBuffer for reliability, await completion)
+      if (db) {
+        try {
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('pdfs', 'readwrite');
+            tx.objectStore('pdfs').put({ path, data: arrayBuf });
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+          });
+        } catch(e) { console.warn('IndexedDB write failed:', path, e); }
+      }
+    }
+    showToast('??? ' + files.length + ' ???', 'success');
+    const meta = {};
+    for (const cat of Object.keys(examPapersCache))
+      meta[cat] = examPapersCache[cat].map(f => ({ name: f.name, sub: f.sub, path: f.path }));
+    localStorage.setItem('linguaai_exam_meta', JSON.stringify(meta));
+    if (!activeExamCat || !examPapersCache[activeExamCat]) activeExamCat = Object.keys(examPapersCache).sort()[0];
+    renderExamModal();
+  };
+  picker.click();
+}
 
-      /**
-       * 验证文件大小（最大 20MB）
-       * @param {File} file
-       * @returns {boolean}
-       */
-      validateSize(file) {
-        return file.size <= 20 * 1024 * 1024;
-      },
-    };
+async function showExamPapers() {
+  if (Object.keys(examPapersCache).length === 0) {
+    await loadExamFromDB();
+    if (Object.keys(examPapersCache).length > 0) {
+      renderExamModal();
+      return;
+    }
+    pickExamFolder();
+    return;
+  }
+  renderExamModal();
+}
 
-    /* ========== APIClient ========== */
-    const APIClient = {
+function selectExamCat(cat) {
+  activeExamCat = cat;
+  renderExamModal();
+}
 
-      /**
-       * 首选：调用 Mistral OCR API
-       * @param {string} base64
-       * @param {string} mimeType
-       * @returns {Promise<string>}
-       */
-      async callMistral(base64, mimeType) {
-        const isPDF = mimeType === 'application/pdf';
+function renderExamModal() {
+  const cats = Object.keys(examPapersCache);
+  // Move active cat to front
+  const sorted = activeExamCat ? [activeExamCat, ...cats.filter(c => c !== activeExamCat)] : cats;
 
-        const body = {
-          model: CONFIG.MISTRAL.model,
-          document: isPDF
-            ? { type: 'document_url', document_url: `data:${mimeType};base64,${base64}` }
-            : { type: 'image_url',    image_url:    `data:${mimeType};base64,${base64}` },
-          prompt: CONFIG.SYSTEM_PROMPT,
-        };
+  // Compute selected count for current category
+  let selCount = 0;
+  if (examDeleteMode && activeExamCat && examPapersCache[activeExamCat]) {
+    for (const f of examPapersCache[activeExamCat]) {
+      if (examSelectedForDelete.has(f.path)) selCount++;
+    }
+  }
+  const totalCount = activeExamCat && examPapersCache[activeExamCat] ? examPapersCache[activeExamCat].length : 0;
 
-        const res = await fetch(CONFIG.MISTRAL.endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${CONFIG.MISTRAL.apiKey}`,
-          },
-          body: JSON.stringify(body),
+  document.getElementById('examList').innerHTML = `
+    <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      ${sorted.map(cat =>
+        `<button class="btn btn-sm ${cat === activeExamCat ? 'btn-primary' : 'btn-outline'}"
+                 onclick="selectExamCat('${cat.replace(/'/g,"\\'")}')"
+                 style="font-size:12px">📁 ${cat}</button>`
+      ).join('')}
+      <button class="btn btn-sm btn-outline" onclick="pickExamFolder()" style="font-size:12px">＋</button>
+      ${examDeleteMode
+        ? `<button class="btn btn-sm btn-outline" onclick="toggleExamDeleteMode()" style="font-size:12px;color:#ef4444;border-color:#fecaca">✕ 取消</button>`
+        : `<button class="btn btn-sm btn-outline" onclick="toggleExamDeleteMode()" style="font-size:12px" title="删除文件">🗑️ 删除</button>`
+      }
+    </div>
+    ${examDeleteMode && activeExamCat && totalCount > 0 ? `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px">
+        <label style="font-size:13px;color:#991b1b;cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none">
+          <input type="checkbox" onchange="toggleExamSelectAll(this.checked)" ${selCount === totalCount ? 'checked' : ''} style="accent-color:#ef4444">
+          全选 (${selCount}/${totalCount})
+        </label>
+        <div style="flex:1"></div>
+        <button class="btn btn-sm btn-danger" onclick="confirmExamDelete()" ${selCount === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>删除选中项 (${selCount})</button>
+      </div>
+    ` : ''}
+    <div style="margin-top:4px">
+      ${activeExamCat && examPapersCache[activeExamCat] ? (() => {
+        const items = examPapersCache[activeExamCat];
+        const subs = {};
+        for (const f of items) {
+          const key = f.sub || '__root__';
+          if (!subs[key]) subs[key] = [];
+          subs[key].push(f);
+        }
+        return Object.keys(subs).sort().map(sk => `
+          ${sk !== '__root__' ? `<div style="font-size:12px;color:#64748b;margin:6px 0 3px 0">▸ ${sk}</div>` : ''}
+          ${subs[sk].map(f => {
+            const isSel = examSelectedForDelete.has(f.path);
+            return examDeleteMode
+              ? `<div class="exam-item"
+                   style="padding:6px 10px;border:1px solid ${isSel ? '#ef4444' : '#e2e8f0'};border-radius:6px;cursor:pointer;font-size:13px;margin-bottom:3px;transition:all 0.1s;display:flex;align-items:center;gap:8px;${isSel ? 'background:#fef2f2' : ''}"
+                   onclick="toggleExamSelect('${f.path.replace(/'/g,"\\'")}', this)">
+                   <input type="checkbox" ${isSel ? 'checked' : ''} style="accent-color:#ef4444;pointer-events:none">
+                   <span style="flex:1">${f.name}</span>
+                 </div>`
+              : `<div class="exam-item"
+                   style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;font-size:13px;margin-bottom:3px;transition:all 0.1s"
+                   onclick="openExamPaper('${activeExamCat.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}','${(f.sub||'').replace(/'/g,"\\'")}')"
+                   onmouseover="this.style.background='#f1f5f9';this.style.borderColor='#2563eb'"
+                   onmouseout="this.style.background='';this.style.borderColor='#e2e8f0'">${f.name}</div>`;
+          }).join('')}
+        `).join('');
+      })() : '<div style="color:#94a3b8;text-align:center;padding:20px">选择文件夹以查看文件</div>'}
+    </div>
+  `;
+  document.getElementById('examModal').classList.add('active');
+}
+
+function openExamPaper(cat, name, sub) {
+  const f = examPapersCache[cat]?.find(x => x.name === name && (x.sub||'') === (sub||''));
+  if (!f) return;
+  if (!f.blob) {
+    showToast('文件数据未加载，请重新选择文件夹', 'warning');
+    hideExamModal();
+    pickExamFolder();
+    return;
+  }
+  const url = URL.createObjectURL(f.blob);
+  const area = document.getElementById('articleArea');
+  STATE.articleText = '';
+  area.innerHTML = `<div style="display:flex;flex-direction:column;height:100%">
+    <div style="padding:8px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;font-size:13px;color:#475569;flex-shrink:0">
+      <span style="font-weight:600">${f.name}</span>
+      <span style="color:#94a3b8">|</span>
+      <span>${(f.blob.size / 1024 / 1024).toFixed(1)} MB</span>
+    </div>
+    <iframe src="${url}" style="flex:1;width:100%;border:none;min-height:0"></iframe>
+  </div>`;
+  document.getElementById('examModal').classList.remove('active');
+  showToast('已打开: ' + f.name, 'success');
+}
+
+function hideExamModal() {
+  examDeleteMode = false;
+  examSelectedForDelete.clear();
+  document.getElementById('examModal').classList.remove('active');
+}
+
+function toggleExamDeleteMode() {
+  examDeleteMode = !examDeleteMode;
+  examSelectedForDelete.clear();
+  renderExamModal();
+}
+
+function toggleExamSelect(path, el) {
+  if (examSelectedForDelete.has(path)) {
+    examSelectedForDelete.delete(path);
+    el.style.background = '';
+    el.style.borderColor = '#e2e8f0';
+    const cb = el.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = false;
+  } else {
+    examSelectedForDelete.add(path);
+    el.style.background = '#fef2f2';
+    el.style.borderColor = '#ef4444';
+    const cb = el.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = true;
+  }
+  updateExamDeleteToolbar();
+}
+
+function toggleExamSelectAll(checked) {
+  if (!activeExamCat || !examPapersCache[activeExamCat]) return;
+  examSelectedForDelete.clear();
+  if (checked) {
+    for (const f of examPapersCache[activeExamCat]) {
+      examSelectedForDelete.add(f.path);
+    }
+  }
+  renderExamModal();
+}
+
+function updateExamDeleteToolbar() {
+  const total = activeExamCat && examPapersCache[activeExamCat] ? examPapersCache[activeExamCat].length : 0;
+  const sel = examSelectedForDelete.size;
+  const allCb = document.querySelector('#examList input[type=checkbox][onchange*="toggleExamSelectAll"]');
+  if (allCb) allCb.checked = (sel === total && total > 0);
+  const label = allCb ? allCb.parentElement : null;
+  if (label) {
+    const textNode = label.lastChild;
+    if (textNode) textNode.textContent = ' 全选 (' + sel + '/' + total + ')';
+  }
+  const delBtn = document.querySelector('#examList .btn-danger');
+  if (delBtn) {
+    delBtn.textContent = '删除选中项 (' + sel + ')';
+    if (sel === 0) {
+      delBtn.disabled = true;
+      delBtn.style.opacity = '0.5';
+      delBtn.style.cursor = 'not-allowed';
+    } else {
+      delBtn.disabled = false;
+      delBtn.style.opacity = '';
+      delBtn.style.cursor = '';
+    }
+  }
+}
+
+async function confirmExamDelete() {
+  if (examSelectedForDelete.size === 0) return;
+  const count = examSelectedForDelete.size;
+  if (!confirm('确定要删除选中的 ' + count + ' 个文件吗？此操作不可撤销。')) return;
+
+  const db = await openExamDB();
+  if (db) {
+    for (const path of examSelectedForDelete) {
+      try {
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('pdfs', 'readwrite');
+          tx.objectStore('pdfs').delete(path);
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
         });
+      } catch(e) { console.warn('IndexedDB delete failed:', path, e); }
+    }
+  }
 
-        if (!res.ok) throw new Error(`Mistral API error: ${res.status}`);
+  for (const cat of Object.keys(examPapersCache)) {
+    examPapersCache[cat] = examPapersCache[cat].filter(f => !examSelectedForDelete.has(f.path));
+    if (examPapersCache[cat].length === 0) {
+      delete examPapersCache[cat];
+    }
+  }
 
-        const data = await res.json();
-        return data.pages.map(p => p.markdown).join('\n\n---\n\n');
-      },
+  const meta = {};
+  for (const cat of Object.keys(examPapersCache)) {
+    meta[cat] = examPapersCache[cat].map(f => ({ name: f.name, sub: f.sub, path: f.path }));
+  }
+  localStorage.setItem('linguaai_exam_meta', JSON.stringify(meta));
 
-      /**
-       * 次选：调用通义千问VL API
-       * @param {string} base64
-       * @param {string} mimeType
-       * @returns {Promise<string>}
-       */
-      async callQwen(base64, mimeType) {
-        const body = {
-          model: CONFIG.QWEN.model,
-          input: {
-            messages: [
-              {
-                role: 'system',
-                content: CONFIG.SYSTEM_PROMPT,
-              },
-              {
-                role: 'user',
-                content: [
-                  {
-                    image: `data:${mimeType};base64,${base64}`,
-                  },
-                  {
-                    text: '请识别这份试卷并严格按照格式要求输出 Markdown。',
-                  },
-                ],
-              },
-            ],
-          },
-          parameters: {
-            result_format: 'message',
-          },
-        };
+  if (!examPapersCache[activeExamCat]) {
+    activeExamCat = Object.keys(examPapersCache).sort()[0] || '';
+  }
+  examDeleteMode = false;
+  examSelectedForDelete.clear();
 
-        const res = await fetch(CONFIG.QWEN.endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${CONFIG.QWEN.apiKey}`,
-            'X-DashScope-Async': 'disable',
-          },
-          body: JSON.stringify(body),
-        });
+  if (Object.keys(examPapersCache).length === 0) {
+    hideExamModal();
+    showToast('已全部删除，可重新导入文件夹', 'success');
+  } else {
+    renderExamModal();
+    showToast('已删除 ' + count + ' 个文件', 'success');
+  }
+}
 
-        if (!res.ok) throw new Error(`Qwen API error: ${res.status}`);
+// ===== LEARNING RESOURCES (dynamic by language) =====
+const FETCH_RESOURCES = {
+  zh: [
+    { name: 'BBC Learning English', url: 'https://www.bbc.co.uk/learningenglish' },
+    { name: 'VOA Learning English', url: 'https://learningenglish.voanews.com/' },
+    { name: 'British Council', url: 'https://learnenglish.britishcouncil.org/' },
+    { name: 'Smithsonian', url: 'https://www.smithsonianmag.com/' },
+    { name: 'NASA News', url: 'https://www.nasa.gov/news/' },
+    { name: 'Reuters', url: 'https://www.reuters.com/' },
+    { name: 'AP News', url: 'https://apnews.com/' },
+    { name: 'NPR', url: 'https://www.npr.org/' },
+    { name: 'maspeak', url: 'https://maspeak.com/' },
+    { name: 'My English Pages', url: 'https://www.myenglishpages.com/reading/' },
+    { name: 'WSJ', url: 'https://www.wsj.com/' },
+    { name: 'tingroom', url: 'https://www.tingroom.com/' },
+    { name: 'enread', url: 'https://www.enread.com/' },
+    { name: '历年真题', url: 'showExamPapers', isModal: true },
+  ],
+  en: [
+    { name: 'China Daily', url: 'https://www.chinadaily.com.cn/' },
+    { name: "People's Daily", url: 'http://www.people.com.cn/' },
+    { name: 'Xinhua', url: 'https://www.xinhuanet.com/' },
+    { name: 'CCTV News', url: 'https://news.cctv.com/' },
+    { name: 'Sina News', url: 'https://news.sina.com.cn/' },
+    { name: 'Tencent News', url: 'https://news.qq.com/' },
+  ],
+};
 
-        const data = await res.json();
-        return data.output.choices[0].message.content
-          .filter(c => c.text)
-          .map(c => c.text)
-          .join('');
-      },
+function renderResources() {
+  const container = document.getElementById('fetchSourceContainer');
+  if (!container) return;
+  const items = FETCH_RESOURCES[uiLang] || FETCH_RESOURCES.zh;
+  container.innerHTML = items.map(item => {
+    if (item.isModal) {
+      return `<button class="btn btn-outline btn-sm fetch-btn" onclick="${item.url}()">${item.name}</button>`;
+    }
+    return `<a class="btn btn-outline btn-sm fetch-btn" href="${item.url}" target="_blank" rel="noopener">${item.name}</a>`;
+  }).join('');
+}
 
-      /**
-       * 主调用入口：自动降级
-       * @param {string} base64
-       * @param {string} mimeType
-       * @returns {Promise<{markdown: string, usedEngine: string}>}
-       */
-      async recognize(base64, mimeType) {
-        // 首选 Mistral
-        if (CONFIG.MISTRAL.apiKey) {
-          try {
-            const markdown = await this.callMistral(base64, mimeType);
-            return { markdown, usedEngine: 'Mistral OCR' };
-          } catch (err) {
-            console.warn('Mistral 失败，降级到通义千问:', err.message);
+function renderGenButtons() {
+  const container = document.getElementById('genButtonContainer');
+  if (!container) return;
+  const keys = GEN_LAYOUTS[uiLang] || GEN_LAYOUTS.zh;
+  container.innerHTML = keys.map(key => {
+    const action = key === 'custom' ? "showCustomPrompt()" : `generateArticle('${key}')`;
+    const i18nKey = key === 'custom' ? 'genCustom' : `gen${key.charAt(0).toUpperCase() + key.slice(1)}`;
+    return `<button class="btn btn-outline btn-sm" onclick="${action}">${GEN_BTN_ICON}<span data-i18n="${i18nKey}">${t(i18nKey)}</span></button>`;
+  }).join('');
+}
+
+function showCustomPrompt() {
+  document.getElementById('customPromptModal').classList.add('active');
+  document.getElementById('customPromptInput').focus();
+}
+
+function hideCustomPromptModal() {
+  document.getElementById('customPromptModal').classList.remove('active');
+}
+
+async function generateCustomArticle() {
+  const prompt = document.getElementById('customPromptInput').value.trim();
+  const lang = document.getElementById('customPromptLang').value;
+  if (!prompt) { showToast('请输入生成提示词', 'warning'); return; }
+
+  hideCustomPromptModal();
+  showLoading('AI 正在生成...');
+  clearAnnotation();
+
+  try {
+    const content = await callLLM([
+      { role: 'system', content: `你是一个专业的${lang === 'zh' ? '中文' : lang === 'jp' ? '日文' : '英文'}学习内容生成助手。严格按照用户要求输出。标题前加# ，重点词汇用**加粗**。` },
+      { role: 'user', content: prompt }
+    ], { temperature: 0.8, max_tokens: 4096 });
+
+    hideLoading();
+    renderArticle(content);
+    showToast('文章生成成功', 'success');
+  } catch(e) {
+    hideLoading();
+    showToast(`生成失败: ${e.message}`, 'error');
+  }
+}
+
+// ============================================================
+//  ARTICLE RENDERING
+// ============================================================
+
+function renderArticle(markdownText) {
+  const area = document.getElementById('articleArea');
+  STATE.articleText = markdownText;
+
+  // Parse simple markdown to HTML
+  let html = markdownText
+    .replace(/^# (.+)$/gm, '<div class="article-title">$1</div>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+
+  // Create container
+  const container = document.createElement('div');
+  container.innerHTML = `<div class="article-text">${html}</div>`;
+
+  // Tokenize all text nodes in the article-text div, preserving HTML structure
+  const articleTextDiv = container.querySelector('.article-text');
+  if (articleTextDiv) {
+    tokenizeDOM(articleTextDiv);
+  }
+
+  // Direct DOM append — preserves all attributes without innerHTML serialization
+  area.innerHTML = '';
+  area.appendChild(container.querySelector('.article-text'));
+  attachArticleDelegates();
+  updateTokenTooltips();
+  saveArticleToLocal();
+}
+
+function tokenizeDOM(root) {
+  // Collect all text nodes first (to avoid issues with live DOM modification)
+  const textNodes = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+  while (walker.nextNode()) {
+    textNodes.push(walker.currentNode);
+  }
+
+  textNodes.forEach(textNode => {
+    const parent = textNode.parentNode;
+    // Skip if parent is a token span (already processed) or if text is empty
+    if (!textNode.textContent.trim() || parent.classList?.contains('token')) return;
+
+    const tokens = tokenizeText(textNode.textContent);
+    const fragment = document.createDocumentFragment();
+
+    tokens.forEach(token => {
+      if (token.type === 'word') {
+        const span = document.createElement('span');
+        span.className = 'token';
+        span.dataset.word = token.text.toLowerCase();
+        span.textContent = token.text;
+        // Events handled via delegation in attachArticleDelegates()
+
+        // Check if this word was originally bold
+        if (parent.tagName === 'STRONG' || (parent.nodeType === Node.ELEMENT_NODE && parent.closest?.('strong'))) {
+          span.dataset.bold = 'true';
+          span.style.fontWeight = '700';
+          span.style.color = '#2563eb';
+        }
+
+        // Check if we already have a cached translation for this word
+        const wordLower = token.text.toLowerCase();
+        if (translationCache[wordLower]) {
+          span.classList.add('has-translation');
+        }
+        else if (STATE.annotations.find(a => a.type === 'word' && a.text.toLowerCase() === wordLower && a.chinese)) {
+          const cached = STATE.annotations.find(a => a.type === 'word' && a.text.toLowerCase() === wordLower && a.chinese);
+          if (cached) {
+            translationCache[wordLower] = getCrossTranslation(cached);
+            span.classList.add('has-translation');
           }
         }
 
-        // 次选 通义千问
-        if (CONFIG.QWEN.apiKey) {
-          const markdown = await this.callQwen(base64, mimeType);
-          return { markdown, usedEngine: '通义千问VL' };
-        }
-
-        throw new Error('请至少配置一个 API Key（Mistral 或 通义千问）');
-      },
-    };
-
-    /* ========== MarkdownRenderer ========== */
-    const MarkdownRenderer = {
-
-      /**
-       * 将 Markdown 转为带格式的 HTML
-       * @param {string} markdown
-       * @returns {string}
-       */
-      toHTML(markdown) {
-        let html = markdown
-          // 转义 HTML 特殊字符（防 XSS）
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-
-          // 恢复 &emsp; 首行缩进
-          .replace(/&amp;emsp;/g, '&emsp;')
-
-          // 标题
-          .replace(/^# (.+)$/gm,   '<h1>$1</h1>')
-          .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
-          .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-
-          // 加粗
-          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-
-          // 斜体
-          .replace(/\*(.+?)\*/g, '<em>$1</em>')
-
-          // 引用块（听力原文）
-          .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>')
-
-          // 选项缩进（4空格开头的行）
-          .replace(/^    (.+)$/gm, '<div class="option">$1</div>')
-
-          // 分页线
-          .replace(/^---$/gm, '<hr class="page-break">')
-
-          // 填空下划线
-          .replace(/___/g, '<span class="blank">________</span>')
-
-          // 普通段落（非标签行）
-          .replace(/^(?!<)(.+)$/gm, '<p>$1</p>')
-
-          // 空行
-          .replace(/^\s*$/gm, '');
-
-        return html;
-      },
-
-      /**
-       * 渲染到指定 DOM 容器
-       * @param {string} markdown
-       * @param {HTMLElement} container
-       */
-      render(markdown, container) {
-        container.innerHTML = this.toHTML(markdown);
-      },
-    };
-
-    /* ========== App ========== */
-    const App = {
-
-      state: {
-        file: null,
-        markdown: '',
-        isLoading: false,
-      },
-
-      /**
-       * 初始化：绑定所有事件
-       */
-      init() {
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('fileInput');
-
-        dropzone.addEventListener('dragover', e => {
-          e.preventDefault();
-          dropzone.classList.add('drag-over');
-        });
-
-        dropzone.addEventListener('dragleave', () => {
-          dropzone.classList.remove('drag-over');
-        });
-
-        dropzone.addEventListener('drop', e => {
-          e.preventDefault();
-          dropzone.classList.remove('drag-over');
-          this.handleFile(e.dataTransfer.files[0]);
-        });
-
-        dropzone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', e => this.handleFile(e.target.files[0]));
-
-        document.getElementById('copyBtn').addEventListener('click', () => this.copyMarkdown());
-
-        document.getElementById('saveMistralKey').addEventListener('click', () => {
-          CONFIG.MISTRAL.apiKey = document.getElementById('mistralKey').value.trim();
-          this.showToast('Mistral Key 已保存');
-        });
-
-        document.getElementById('saveQwenKey').addEventListener('click', () => {
-          CONFIG.QWEN.apiKey = document.getElementById('qwenKey').value.trim();
-          this.showToast('通义千问 Key 已保存');
-        });
-      },
-
-      /**
-       * 处理上传文件的主流程
-       * @param {File} file
-       */
-      async handleFile(file) {
-        if (!file) return;
-
-        const type = FileHandler.getFileType(file);
-        if (type === 'unsupported') {
-          this.showError('仅支持 PDF 和图片文件（PNG、JPG、JPEG、WEBP）');
-          return;
-        }
-        if (!FileHandler.validateSize(file)) {
-          this.showError('文件大小不能超过 20MB');
-          return;
-        }
-
-        this.state.file = file;
-        this.setLoading(true);
-        this.showPreview(file, type);
-
-        try {
-          const { base64, mimeType } = await FileHandler.toBase64(file);
-          const { markdown, usedEngine } = await APIClient.recognize(base64, mimeType);
-
-          this.state.markdown = markdown;
-          MarkdownRenderer.render(markdown, document.getElementById('resultPanel'));
-
-          document.getElementById('engineBadge').textContent = `识别引擎：${usedEngine}`;
-          document.getElementById('resultSection').style.display = 'block';
-
-        } catch (err) {
-          this.showError(err.message);
-        } finally {
-          this.setLoading(false);
-        }
-      },
-
-      /**
-       * 显示原文件预览
-       */
-      showPreview(file, type) {
-        const preview = document.getElementById('previewPanel');
-        if (type === 'image') {
-          const url = URL.createObjectURL(file);
-          preview.innerHTML = `<img src="${url}" style="max-width:100%">`;
+        fragment.appendChild(span);
+        } else if (token.type === 'space') {
+          const span = document.createElement('span');
+          span.className = 'token token-space';
+          span.textContent = token.text;
+          fragment.appendChild(span);
         } else {
-          preview.innerHTML = `<p class="pdf-hint">PDF：${file.name}</p>`;
+          const span = document.createElement('span');
+          span.className = 'token punct';
+          span.textContent = token.text;
+          fragment.appendChild(span);
         }
-      },
+    });
 
-      /**
-       * 复制 Markdown 到剪贴板
-       */
-      async copyMarkdown() {
-        if (!this.state.markdown) return;
-        await navigator.clipboard.writeText(this.state.markdown);
-        this.showToast('Markdown 已复制到剪贴板');
-      },
+    parent.replaceChild(fragment, textNode);
+  });
 
-      setLoading(bool) {
-        this.state.isLoading = bool;
-        document.getElementById('loadingOverlay').style.display = bool ? 'flex' : 'none';
-      },
+  // Clean up: unwrap <strong> since we marked tokens with bold styling
+  root.querySelectorAll('strong').forEach(el => {
+    const parent = el.parentNode;
+    while (el.firstChild) {
+      parent.insertBefore(el.firstChild, el);
+    }
+    parent.removeChild(el);
+  });
+}
 
-      showError(msg) {
-        document.getElementById('errorMsg').textContent = msg;
-        document.getElementById('errorMsg').style.display = 'block';
-        setTimeout(() => {
-          document.getElementById('errorMsg').style.display = 'none';
-        }, 5000);
-      },
+function tokenizeText(text) {
+  const tokens = [];
+  // Split into words (including hyphenated and apostrophe) and non-word separators
+  const parts = text.match(/[\w'\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]+|[^\w'\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]+/g);
+  if (!parts) return tokens;
 
-      showToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 2500);
-      },
+  for (const part of parts) {
+    if (/^[\w'\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]+$/.test(part)) {
+      // Check if it's Chinese/Japanese characters - treat each char as separate word
+      if (/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]/.test(part)) {
+        for (const char of part) {
+          tokens.push({ text: char, type: 'word' });
+        }
+      } else {
+        tokens.push({ text: part, type: 'word' });
+      }
+    } else if (/^\s+$/.test(part)) {
+      tokens.push({ text: part, type: 'space' });
+    } else {
+      tokens.push({ text: part, type: 'punct' });
+    }
+  }
+  return tokens;
+}
+
+// ============================================================
+//  TOKEN CLICK HANDLING
+// ============================================================
+
+function handleTokenClick(element) {
+  const word = element.dataset.word;
+  if (!word) return;
+
+  // If in highlight mode, toggle highlight instead of analyzing
+  if (STATE.highlightMode) {
+    toggleWordHighlight(element);
+    return;
+  }
+
+  // Get surrounding sentence
+  const sentence = getSurroundingSentence(element);
+
+  // Clear previous active states and sentence highlights
+  document.querySelectorAll('.token.active').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sentence-active').forEach(el => el.classList.remove('sentence-active'));
+
+  if (STATE.currentMode === 'word') {
+    element.classList.add('active');
+    analyzeWordLocal(word, sentence, element);
+  } else {
+    // In sentence mode, highlight all tokens in the same sentence
+    highlightSentenceTokens(sentence);
+    analyzeSentenceLocal(sentence, element);
+  }
+}
+
+function highlightSentenceTokens(sentence) {
+  if (!sentence) return;
+  const tokens = document.querySelectorAll('.token:not(.token-space):not(.punct)');
+  // Build up text from tokens and find the sentence span
+  // Simple approach: use the clicked token's position
+  const sentenceLower = sentence.toLowerCase().replace(/[.!?]+$/, '').trim();
+  tokens.forEach(t => {
+    if (sentenceLower.includes(t.dataset.word || '')) {
+      t.classList.add('sentence-active');
+    }
+  });
+}
+
+function getSurroundingSentence(element) {
+  const articleArea = document.getElementById('articleArea');
+  const articleText = articleArea.textContent || '';
+
+  // Find all text nodes and build a map
+  const walker = document.createTreeWalker(articleArea, NodeFilter.SHOW_TEXT, null, false);
+  let allText = '';
+  const positions = [];
+  while (walker.nextNode()) {
+    const start = allText.length;
+    allText += walker.currentNode.textContent;
+    positions.push({ node: walker.currentNode, start, end: allText.length });
+  }
+
+  // Find word position
+  const word = element.dataset.word;
+  const idx = allText.toLowerCase().indexOf(word);
+  if (idx === -1) return word;
+
+  // Find sentence boundaries
+  let start = idx;
+  let end = idx + word.length;
+
+  // Extend to sentence boundaries
+  while (start > 0 && !'.!?\n'.includes(allText[start - 1])) start--;
+  while (end < allText.length && !'.!?\n'.includes(allText[end])) end++;
+
+  // Include the punctuation at the end
+  if (end < allText.length && '.!?'.includes(allText[end])) end++;
+
+  return allText.slice(start, end).trim();
+}
+
+// ============================================================
+//  WORD ANALYSIS
+// ============================================================
+
+function parseJSONSafe(text) {
+  // Try direct parse first
+  try { return JSON.parse(text.trim()); } catch(e) {}
+  // Remove markdown code blocks
+  let cleaned = text.replace(/```(?:json)?\s*/gi, '').replace(/\s*```/g, '').trim();
+  try { return JSON.parse(cleaned); } catch(e) {}
+  // Try to find JSON object in the text
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try { return JSON.parse(jsonMatch[0]); } catch(e) {}
+  }
+  throw new Error('无法解析 AI 返回的 JSON 格式');
+}
+
+async function analyzeWordLocal(word, sentence, element) {
+  const isChineseWord = /[\u4e00-\u9fff]/.test(word);
+  const prompt = uiLang === 'zh' || !isChineseWord
+    ? `你是一位专业的语言学习助手。请分析这个词汇"${word}"。
+
+上下文句子："${sentence}"
+
+请以JSON格式返回以下信息（只输出JSON，不要多余内容）：
+{
+  "word": "${word}",
+  "pos": "词性",
+  "phonetic": "音标（如果有）",
+  "chinese": "中文释义",
+  "english": "English translation / explanation（如果是中文词，给出英文翻译）",
+  "synonyms": ["同义词1", "同义词2", "同义词3"],
+  "antonyms": ["反义词1", "反义词2"],
+  "example": "一个包含该词的例句（带翻译）",
+  "frequency": 1到5的整数（1=最常用，5=最生僻）,
+  "collocations": ["常用搭配1", "常用搭配2", "常用搭配3"],
+  "context_meaning": "在本文上下文中的具体含义",
+  "derivatives": ["常见衍生短语1（含翻译）", "常见衍生短语2（含翻译）", "常见衍生短语3（含翻译）"],
+  "long_sentences": [
+    {"sentence": "包含该词的长难句1", "translation": "翻译"},
+    {"sentence": "包含该词的长难句2", "translation": "翻译"}
+  ]
+}`
+    : `You are a professional language learning assistant. Analyze this word/phrase "${word}".
+
+Context sentence: "${sentence}"
+
+Return JSON ONLY (no extra text):
+{
+  "word": "${word}",
+  "pos": "Part of speech (noun, verb, adj, etc.)",
+  "phonetic": "Pronunciation in IPA",
+  "chinese": "English definition / explanation",
+  "synonyms": ["synonym1", "synonym2", "synonym3"],
+  "antonyms": ["antonym1", "antonym2"],
+  "example": "Example sentence with English translation",
+  "frequency": 1-5 (1=most common, 5=rare),
+  "collocations": ["collocation1", "collocation2", "collocation3"],
+  "context_meaning": "Meaning in this specific context",
+  "derivatives": ["derivative phrase1 (with explanation)", "derivative phrase2"],
+  "long_sentences": [
+    {"sentence": "Complex sentence using this word (15-25 words)", "translation": "English explanation"},
+    {"sentence": "Another complex sentence example", "translation": "English explanation"}
+  ]
+}`;
+
+  showLoading('AI 正在分析词汇...', true);
+  try {
+    const content = await callLLM([
+      { role: 'system', content: '你是一个语言学习专家。只输出JSON，不要其他内容。' },
+      { role: 'user', content: prompt }
+    ], { temperature: 0.2, max_tokens: 2048 });
+
+    hideLoading();
+
+    // Parse JSON from response
+    const data = parseJSONSafe(content);
+
+    // Store annotation
+    const annotation = {
+      id: Date.now().toString(),
+      type: 'word',
+      text: word,
+      pos: data.pos || '',
+      chinese: data.chinese || '',
+      english: data.english || '',
+      phonetic: data.phonetic || '',
+      synonyms: data.synonyms || [],
+      antonyms: data.antonyms || [],
+      example: data.example || '',
+      frequency: data.frequency || 3,
+      collocations: data.collocations || [],
+      contextMeaning: data.context_meaning || '',
+      derivatives: data.derivatives || [],
+      longSentences: data.long_sentences || [],
+      sentence: sentence,
+      saved: false,
+      timestamp: Date.now()
     };
 
-    // 启动
-    App.init();
-  </script>
+    STATE.annotations.push(annotation);
+    localStorage.setItem('linguaai_annotations', JSON.stringify(STATE.annotations));
+
+    // Cache translation for hover tooltip
+    if (annotation.chinese) {
+      translationCache[word.toLowerCase()] = getCrossTranslation(annotation);
+      updateTokenTranslationUI(word);
+    }
+
+    showAnnotationWord(annotation);
+    showToast(`已分析: ${word}`, 'info');
+
+  } catch(e) {
+    hideLoading();
+    showToast(`分析失败: ${e.message}`, 'error');
+  }
+}
+
+// ============================================================
+//  SENTENCE ANALYSIS
+// ============================================================
+
+async function analyzeSentenceLocal(sentence, element) {
+  const prompt = uiLang === 'zh'
+    ? `请分析这个英文句子：
+
+"${sentence}"
+
+请以JSON格式返回（只输出JSON）：
+{
+  "sentence": "${sentence}",
+  "translation": "中文翻译",
+  "structure": "语法结构分析（句型、时态、语态等）",
+  "main_clause": "句子主干（主语+谓语+宾语）",
+  "clauses": [
+    {"type": "从句类型", "text": "从句内容", "explanation": "解释"}
+  ],
+  "key_grammar": ["语法点1", "语法点2"],
+  "paraphrase": "用简单英语改写的版本",
+  "writing_tip": "写作技巧"
+}`
+    : `Analyze this sentence in English:
+
+"${sentence}"
+
+Return JSON ONLY:
+{
+  "sentence": "${sentence}",
+  "translation": "English paraphrase/explanation",
+  "structure": "Grammatical analysis (tense, voice, sentence type)",
+  "main_clause": "Main clause (subject + predicate + object)",
+  "clauses": [
+    {"type": "Clause type", "text": "Clause content", "explanation": "Explanation"}
+  ],
+  "key_grammar": ["grammar point 1", "grammar point 2"],
+  "paraphrase": "Simplified version in plain English",
+  "writing_tip": "How to use this sentence pattern in writing"
+}`;
+
+  showLoading('AI 正在分析句子...', true);
+  try {
+    const content = await callLLM([
+      { role: 'system', content: '你是一个英语语法专家。只输出JSON，不要其他内容。' },
+      { role: 'user', content: prompt }
+    ], { temperature: 0.2, max_tokens: 2048 });
+
+    hideLoading();
+    const data = parseJSONSafe(content);
+
+    const annotation = {
+      id: Date.now().toString(),
+      type: 'sentence',
+      text: sentence,
+      translation: data.translation || '',
+      structure: data.structure || '',
+      mainClause: data.main_clause || '',
+      clauses: data.clauses || [],
+      keyGrammar: data.key_grammar || [],
+      paraphrase: data.paraphrase || '',
+      writingTip: data.writing_tip || '',
+      saved: false,
+      timestamp: Date.now()
+    };
+
+    STATE.sentences.push(annotation);
+    STATE.annotations.push(annotation);
+    localStorage.setItem('linguaai_sentences', JSON.stringify(STATE.sentences));
+    localStorage.setItem('linguaai_annotations', JSON.stringify(STATE.annotations));
+
+    showAnnotationSentence(annotation);
+    showToast('句子分析完成', 'info');
+
+  } catch(e) {
+    hideLoading();
+    showToast(`分析失败: ${e.message}`, 'error');
+  }
+}
+
+// ============================================================
+//  DISPLAY ANNOTATIONS
+// ============================================================
+
+function showAnnotationWord(data) {
+  const container = document.getElementById('annotationContent');
+  document.getElementById('annotationEmpty').style.display = 'none';
+  container.style.display = 'block';
+
+  const isSaved = STATE.wordBook.some(w => w.word === data.text);
+  const isChineseWord = /[\u4e00-\u9fff]/.test(data.text);
+  const meaningLabel = isChineseWord ? t('englishMeaning') : t('chinese');
+  lastAnnotationData = data;
+  lastAnnotationType = 'word';
+
+  const freqStars = '★★★★★'.split('').map((star, i) =>
+    `<span class="ann-freq-star ${i >= data.frequency ? 'empty' : ''}">★</span>`
+  ).join('');
+
+  const collocationsHtml = data.collocations?.length
+    ? data.collocations.map(c => `<span class="ann-tag">${c}</span>`).join('')
+    : '';
+
+  container.innerHTML = `
+    <div class="ann-card">
+      <div class="ann-word">
+        ${data.text}
+        <button class="sound-btn" onclick='speakText("${data.text.replace(/"/g, '&quot;')}", "en-US")' title="朗读">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+      </div>
+      ${data.phonetic ? `<div class="ann-phonetic">/${data.phonetic}/</div>` : ''}
+      ${data.pos ? `<div class="ann-section"><div class="ann-label">${t('pos')}</div><div class="ann-content">${data.pos}</div></div>` : ''}
+      <div class="ann-section">
+        <div class="ann-label">${meaningLabel}</div>
+        <div class="ann-content" style="font-size:18px;font-weight:600;color:#2563eb">${getCrossTranslation(data)}</div>
+      </div>
+      ${data.contextMeaning ? `<div class="ann-section"><div class="ann-label">${t('context')}</div><div class="ann-content">${data.contextMeaning}</div></div>` : ''}
+      <div class="ann-divider"></div>
+      ${data.synonyms?.length ? `<div class="ann-section"><div class="ann-label">${t('synonyms')}</div><div class="ann-tags">${data.synonyms.map(s => `<span class="ann-tag">${s}</span>`).join('')}</div></div>` : ''}
+      ${data.antonyms?.length ? `<div class="ann-section"><div class="ann-label">${t('antonyms')}</div><div class="ann-tags">${data.antonyms.map(a => `<span class="ann-tag">${a}</span>`).join('')}</div></div>` : ''}
+      ${data.example ? `<div class="ann-section"><div class="ann-label">${t('example')}</div><div class="ann-content" style="font-style:italic">${data.example}</div></div>` : ''}
+      ${collocationsHtml ? `<div class="ann-section"><div class="ann-label">${t('collocations')}</div><div class="ann-tags">${collocationsHtml}</div></div>` : ''}
+      ${data.derivatives?.length ? `
+      <div class="ann-section">
+        <div class="ann-label">${t('derivatives')}</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${data.derivatives.map(d => `<span class="ann-tag" style="display:block;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;padding:4px 10px">${d}</span>`).join('')}
+        </div>
+      </div>` : ''}
+      ${data.longSentences?.length ? `
+      <div class="ann-section">
+        <div class="ann-label">${t('longSentences')}</div>
+        ${data.longSentences.map((ls, i) => `
+          <div style="margin-top:6px;padding:8px 12px;background:#f8fafc;border-radius:8px;border-left:3px solid #7c3aed">
+            <div style="font-size:13px;color:#334155;line-height:1.6">${i+1}. ${ls.sentence}</div>
+            <div style="font-size:13px;color:#7c3aed;margin-top:4px;font-weight:500">${ls.translation}</div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+      <div class="ann-section">
+        <div class="ann-label">${t('frequency')}</div>
+        <div class="ann-freq">${freqStars}</div>
+      </div>
+      <div class="ann-section">
+        <div class="ann-label">${t('originalSentence')}</div>
+        <div class="ann-content" style="font-style:italic;color:#64748b;font-size:13px;background:#f8fafc;padding:8px 12px;border-radius:6px">${data.sentence}</div>
+      </div>
+      <div class="ann-actions">
+        <button class="ann-save-btn ${isSaved ? 'saved' : ''}" onclick='saveWordBookWithAnnotation("${data.text.replace(/"/g, '&quot;').replace(/'/g, "\\'")}")'>
+          ${isSaved ? t('annotationSaved') : t('addWordBook')}
+        </button>
+        <button class="ann-tts-btn" onclick='speakText("${data.sentence.replace(/"/g, '&quot;').replace(/`/g, '\\`').replace(/'/g, "\\'")}", "en-US")'>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          ${t('listenSentence')}
+        </button>
+        <button class="ann-more-btn" onclick='getMoreLearning("${data.text.replace(/"/g, '&quot;')}")'>${t('moreLearning')}</button>
+      </div>
+    </div>
+  `;
+}
+
+function showAnnotationSentence(data) {
+  const container = document.getElementById('annotationContent');
+  document.getElementById('annotationEmpty').style.display = 'none';
+  container.style.display = 'block';
+  lastAnnotationData = data;
+  lastAnnotationType = 'sentence';
+
+  const clausesHtml = data.clauses?.map(c =>
+    `<div style="margin-top:6px;padding:6px 10px;background:#fff;border-radius:6px;border-left:3px solid #2563eb">
+      <div style="font-size:12px;color:#2563eb;font-weight:600">${c.type}</div>
+      <div style="font-size:13px;color:#334155">${c.text}</div>
+      <div style="font-size:12px;color:#64748b">${c.explanation || ''}</div>
+    </div>`
+  ).join('') || '';
+
+  const grammarHtml = data.keyGrammar?.map(g =>
+    `<span class="ann-tag" style="background:#fef3c7;color:#b45309">${g}</span>`
+  ).join('') || '';
+
+  container.innerHTML = `
+    <div class="sent-card">
+      <div class="sent-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        ${t('sheetAnalysis')}
+      </div>
+      <div class="sent-original">${data.text}</div>
+      <div class="sent-label">${t('sheetTranslation')}</div>
+      <div class="sent-content" style="font-weight:500;color:#059669">${data.translation}</div>
+      <div class="sent-label">${t('sheetMain')}</div>
+      <div class="sent-content">${data.mainClause}</div>
+      <div class="sent-label">${t('sheetStructure')}</div>
+      <div class="sent-content">${data.structure}</div>
+      ${clausesHtml ? `<div class="sent-label">${t('sheetClause')}</div>${clausesHtml}` : ''}
+      ${grammarHtml ? `<div class="sent-label" style="margin-top:8px">${t('sheetGrammar')}</div><div class="ann-tags">${grammarHtml}</div>` : ''}
+      <div class="sent-label">${t('sheetParaphrase')}</div>
+      <div class="sent-content" style="font-style:italic">${data.paraphrase}</div>
+      ${data.writingTip ? `<div class="sent-label">${t('sheetWritingTip')}</div><div class="sent-content" style="color:#7c3aed">${data.writingTip}</div>` : ''}
+      <div class="ann-actions" style="margin-top:12px">
+        <button class="ann-tts-btn" onclick='speakText("${data.text.replace(/"/g, '&quot;').replace(/'/g, "\\'")}", "en-US")'>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          ${t('listenSentence')}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ===== MANUAL INPUT SEARCH =====
+function toggleManualInput() {
+  const wrap = document.getElementById('manualInputWrap');
+  const input = document.getElementById('manualInput');
+  const isOpen = wrap.style.display !== 'none' && wrap.style.display !== '';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    input.placeholder = STATE.currentMode === 'sentence'
+      ? (uiLang === 'zh' ? '输入句子...' : 'Type a sentence...')
+      : (uiLang === 'zh' ? '输入单词...' : 'Type a word...');
+    input.value = '';
+    input.focus();
+  }
+}
+
+function submitManualSearch(text) {
+  text = text.trim();
+  if (!text) return;
+  document.getElementById('manualInputWrap').style.display = 'none';
+  clearAnnotation();
+  if (STATE.currentMode === 'sentence') {
+    analyzeSentenceLocal(text, null);
+  } else {
+    analyzeWordLocal(text, '', null);
+  }
+}
+
+function clearAnnotation() {
+  document.getElementById('annotationContent').style.display = 'none';
+  document.getElementById('annotationContent').innerHTML = '';
+  document.getElementById('annotationEmpty').style.display = 'flex';
+  document.querySelectorAll('.token.active').forEach(el => el.classList.remove('active'));
+}
+
+// ============================================================
+//  MORE LEARNING (扩展学习)
+// ============================================================
+
+async function getMoreLearning(word) {
+  const prompt = (uiLang === 'zh'
+    ? `请为词汇"${word}"提供更深入的学习内容。以JSON格式返回：
+{
+  "word": "${word}",
+  "near_synonyms": [
+    {"word": "近义词1", "difference": "与${word}的区别"},
+    {"word": "近义词2", "difference": "与${word}的区别"},
+    {"word": "近义词3", "difference": "与${word}的区别"}
+  ],
+  "usage_scenarios": ["使用场景1", "使用场景2", "使用场景3"],
+  "common_mistakes": "常见用法错误",
+  "memory_tip": "记忆技巧",
+  "related_expressions": ["相关表达1", "相关表达2", "相关表达3"],
+  "pro_level_tip": "更地道的用法"
+}`
+    : `Provide deeper learning content for the word "${word}". Return JSON:
+
+{
+  "word": "${word}",
+  "near_synonyms": [
+    {"word": "synonym1", "difference": "difference from ${word}"},
+    {"word": "synonym2", "difference": "difference from ${word}"},
+    {"word": "synonym3", "difference": "difference from ${word}"}
+  ],
+  "usage_scenarios": ["scenario 1", "scenario 2", "scenario 3"],
+  "common_mistakes": "Common mistakes learners make",
+  "memory_tip": "Memory aid or etymology",
+  "related_expressions": ["related expression 1", "related expression 2", "related expression 3"],
+  "pro_level_tip": "How to use more naturally"
+}`);
+
+  showLoading('正在获取更多学习内容...', true);
+  try {
+    const content = await callLLM([
+      { role: 'system', content: '你是一个语言学习专家。只输出JSON。' },
+      { role: 'user', content: prompt }
+    ], { temperature: 0.3, max_tokens: 2048 });
+
+    hideLoading();
+    const data = parseJSONSafe(content);
+
+    // Clear annotation loading state and append content
+    const container = document.getElementById('annotationContent');
+    container.innerHTML = '';
+    const extraDiv = document.createElement('div');
+    extraDiv.className = 'ann-card';
+    extraDiv.style.marginTop = '12px';
+    extraDiv.style.padding = '16px';
+    extraDiv.style.border = '1px solid #e2e8f0';
+    extraDiv.style.borderRadius = '10px';
+    extraDiv.style.background = '#faf5ff';
+    extraDiv.innerHTML = `
+      <div style="font-size:14px;font-weight:600;color:#7c3aed;margin-bottom:8px">深度扩展：${data.word}</div>
+      ${data.near_synonyms?.length ? `
+        <div class="ann-label" style="margin-top:8px">近义词辨析</div>
+        ${data.near_synonyms.map(s => `
+          <div style="margin-top:4px;padding:6px 10px;background:#fff;border-radius:6px">
+            <strong>${s.word}</strong>：${s.difference}
+          </div>
+        `).join('')}
+      ` : ''}
+      ${data.usage_scenarios?.length ? `
+        <div class="ann-label" style="margin-top:8px">使用场景</div>
+        <div style="font-size:13px;color:#334155">${data.usage_scenarios.map(s => `• ${s}`).join('<br>')}</div>
+      ` : ''}
+      ${data.common_mistakes ? `
+        <div class="ann-label" style="margin-top:8px">常见错误</div>
+        <div style="font-size:13px;color:#dc2626;background:#fef2f2;padding:6px 10px;border-radius:6px">${data.common_mistakes}</div>
+      ` : ''}
+      ${data.memory_tip ? `
+        <div class="ann-label" style="margin-top:8px">记忆技巧</div>
+        <div style="font-size:13px;color:#059669">${data.memory_tip}</div>
+      ` : ''}
+      ${data.pro_level_tip ? `
+        <div class="ann-label" style="margin-top:8px">地道用法</div>
+        <div style="font-size:13px;color:#7c3aed">${data.pro_level_tip}</div>
+      ` : ''}
+    `;
+    container.appendChild(extraDiv);
+    showToast('学习内容已加载', 'success');
+
+  } catch(e) {
+    hideLoading();
+    showToast(`获取失败: ${e.message}`, 'error');
+  }
+}
+
+// ============================================================
+//  WORD BOOK
+// ============================================================
+
+function loadWordBook() {
+  try {
+    const saved = localStorage.getItem('linguaai_wordbook');
+    if (saved) STATE.wordBook = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveWordBookWithAnnotation(wordText) {
+  // Find the full annotation from STATE.annotations
+  const annotation = STATE.annotations.find(a => a.type === 'word' && a.text.toLowerCase() === wordText.toLowerCase());
+  if (!annotation) {
+    // Fallback: save basic entry
+    saveToWordBook({ word: wordText, meaning: '', pos: '', example: '' });
+    return;
+  }
+  saveToWordBook(annotation);
+}
+
+function saveToWordBook(data) {
+  const word = data.word || data.text;
+  if (STATE.wordBook.some(w => w.word === word)) {
+    showToast('已在单词本中', 'info');
+    return;
+  }
+
+  // Build full entry from annotation data
+  STATE.wordBook.push({
+    word: word,
+    meaning: data.chinese || data.meaning || '',
+    english: data.english || '',
+    pos: data.pos || '',
+    phonetic: data.phonetic || '',
+    synonyms: data.synonyms || [],
+    antonyms: data.antonyms || [],
+    example: data.example || '',
+    collocations: data.collocations || [],
+    contextMeaning: data.contextMeaning || data.context_meaning || '',
+    derivatives: data.derivatives || [],
+    longSentences: data.longSentences || data.long_sentences || [],
+    frequency: data.frequency || 3,
+    mastered: false,
+    timestamp: Date.now()
+  });
+
+  localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
+  showToast(`已添加到单词本: ${word}`, 'success');
+
+  // Update button state if visible
+  const saveBtn = document.querySelector('.ann-save-btn');
+  if (saveBtn) {
+    saveBtn.textContent = t('annotationSaved');
+    saveBtn.classList.add('saved');
+  }
+}
+
+function showWordBook() {
+  document.getElementById('wordBookModal').classList.add('active');
+  renderWordBook();
+}
+
+function hideWordBook() {
+  document.getElementById('wordBookModal').classList.remove('active');
+}
+
+function renderWordBook() {
+  const list = document.getElementById('wordBookList');
+  const totalEl = document.getElementById('wbTotal');
+  const todayEl = document.getElementById('wbToday');
+  const sorted = getFilteredWords();
+
+  totalEl.textContent = STATE.wordBook.length;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayCount = STATE.wordBook.filter(w => w.timestamp >= today.getTime()).length;
+  todayEl.textContent = todayCount;
+
+  if (sorted.length === 0) {
+    list.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:40px 0">暂无记录</p>';
+    return;
+  }
+
+  list.innerHTML = `
+    <ul class="wb-list">
+      ${sorted.map(item => {
+        const freqStars = '★★★★★'.split('').map((_, i) =>
+          `<span style="color:${i >= (item.frequency || 3) ? '#e2e8f0' : '#f59e0b'};font-size:12px">★</span>`
+        ).join('');
+        const synStr = item.synonyms?.length ? item.synonyms.slice(0,3).join(', ') : '';
+        const derStr = item.derivatives?.length ? item.derivatives.slice(0,2).join('；') : '';
+        return `
+        <li class="wb-item" style="flex-direction:column;align-items:stretch;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div class="wb-item-word">${item.word} ${item.pos ? `<span style="font-weight:400;font-size:12px;color:#94a3b8;margin-left:4px">${item.pos}</span>` : ''} ${item.phonetic ? `<span style="font-size:12px;color:#94a3b8;font-style:italic">/${item.phonetic}/</span>` : ''}</div>
+              <div class="wb-item-meaning">${item.meaning}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px">${formatDate(item.timestamp)}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span>${freqStars}</span>
+              <button class="wb-item-delete" onclick="deleteWordBookItem('${item.word}')" title="删除">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+          ${item.wrongCount ? `<div style="font-size:11px;color:#ef4444;margin-top:2px">错误 ${item.wrongCount} 次</div>` : ''}
+        ${item.example ? `<div style="font-size:12px;color:#64748b;font-style:italic;padding:4px 8px;background:#f8fafc;border-radius:4px">${item.example}</div>` : ''}
+          ${synStr ? `<div style="font-size:12px;color:#059669">近义: ${synStr}</div>` : ''}
+          ${derStr ? `<div style="font-size:12px;color:#7c3aed">衍生: ${derStr}</div>` : ''}
+          ${item.collocations?.length ? `<div style="font-size:12px;color:#2563eb">搭配: ${item.collocations.slice(0,3).join('、')}</div>` : ''}
+        </li>`;
+      }).join('')}
+    </ul>
+  `;
+}
+
+function deleteWordBookItem(word) {
+  STATE.wordBook = STATE.wordBook.filter(w => w.word !== word);
+  localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
+  renderWordBook();
+  showToast(`已删除: ${word}`, 'info');
+}
+
+function clearWordBook() {
+  if (!confirm('确定清空所有单词本数据吗？')) return;
+  STATE.wordBook = [];
+  localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
+  renderWordBook();
+  showToast('单词本已清空', 'info');
+}
+
+// ===== REVIEW MODE =====
+let reviewState = null;
+
+function filterWordBook() {
+  renderWordBook();
+}
+
+function getFilteredWords() {
+  const fromStr = document.getElementById('wbDateFrom').value;
+  const toStr = document.getElementById('wbDateTo').value;
+  let words = STATE.wordBook;
+  if (fromStr) {
+    const from = new Date(fromStr);
+    from.setHours(0,0,0,0);
+    words = words.filter(w => w.timestamp >= from.getTime());
+  }
+  if (toStr) {
+    const to = new Date(toStr);
+    to.setHours(23,59,59,999);
+    words = words.filter(w => w.timestamp <= to.getTime());
+  }
+  return words.sort((a, b) => b.timestamp - a.timestamp);
+}
+
+function startReview() {
+  const words = getFilteredWords();
+  if (words.length === 0) { showToast('没有可复习的单词', 'warning'); return; }
+  reviewState = {
+    words: words.slice(),
+    current: 0,
+    correct: 0,
+    wrong: 0,
+    wrongWords: [],
+    answered: false
+  };
+  document.getElementById('wordBookModal').classList.remove('active');
+  document.getElementById('reviewModal').classList.add('active');
+  document.getElementById('reviewResult').style.display = 'none';
+  document.getElementById('reviewFeedback').innerHTML = '';
+  document.getElementById('reviewInput').style.display = '';
+  document.getElementById('reviewCheckBtn').style.display = '';
+  const skipBtn = document.querySelector('#reviewBody .btn-secondary');
+  if (skipBtn) skipBtn.style.display = '';
+  showReviewWord();
+}
+
+function showReviewWord() {
+  if (!reviewState || reviewState.current >= reviewState.words.length) {
+    finishReview();
+    return;
+  }
+  const item = reviewState.words[reviewState.current];
+  const isLast = reviewState.current === reviewState.words.length - 1;
+  document.getElementById('reviewWord').textContent = item.word;
+  document.getElementById('reviewPos').textContent = item.pos || '';
+  document.getElementById('reviewProgress').textContent = `${reviewState.current + 1} / ${reviewState.words.length}`;
+  document.getElementById('reviewInput').value = '';
+  document.getElementById('reviewInput').disabled = false;
+  document.getElementById('reviewCheckBtn').disabled = false;
+  document.getElementById('reviewCheckBtn').textContent = t('reviewConfirm');
+  document.getElementById('reviewFeedback').innerHTML = '';
+  document.getElementById('reviewInput').focus();
+  document.getElementById('reviewInput').style.borderColor = '#e2e8f0';
+  // Hide skip button on last word
+  const skipBtn = document.querySelector('#reviewBody .btn-secondary');
+  if (skipBtn) skipBtn.style.display = isLast ? 'none' : '';
+  reviewState.answered = false;
+}
+
+function checkReviewAnswer() {
+  if (!reviewState) return;
+
+  // If already answered, this click = "next" (go to next word)
+  if (reviewState.answered) {
+    if (reviewState.current >= reviewState.words.length - 1) {
+      finishReview();
+    } else {
+      reviewState.current++;
+      showReviewWord();
+    }
+    return;
+  }
+
+  const input = document.getElementById('reviewInput').value.trim().toLowerCase();
+  const item = reviewState.words[reviewState.current];
+  if (!input) { showToast('请输入翻译', 'warning'); return; }
+  const meaning = (item.meaning || '').toLowerCase();
+  // Check if user input matches any keyword in the meaning
+  const keywords = meaning.replace(/[，。、；：]/g, ' ').split(/\s+/).filter(Boolean);
+  const isCorrect = keywords.length > 0 && keywords.some(k => input.includes(k) || k.includes(input));
+  const isLast = reviewState.current === reviewState.words.length - 1;
+
+  reviewState.answered = true;
+  if (isCorrect) {
+    reviewState.correct++;
+    // Mark as mastered if no prior wrong record
+    const wbItem = STATE.wordBook.find(w => w.word === item.word);
+    if (wbItem && !wbItem.wrongCount) {
+      wbItem.mastered = true;
+      localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
+    }
+  } else {
+    reviewState.wrong++;
+    if (!reviewState.wrongWords.find(w => w.word === item.word)) {
+      reviewState.wrongWords.push(item);
+    }
+    const wbItem = STATE.wordBook.find(w => w.word === item.word);
+    if (wbItem) {
+      wbItem.wrongCount = (wbItem.wrongCount || 0) + 1;
+      wbItem.mastered = false;
+      localStorage.setItem('linguaai_wordbook', JSON.stringify(STATE.wordBook));
+    }
+  }
+
+  // Always show correct answer for reference
+  const icon = isCorrect ? t('reviewCorrect') : t('reviewWrong');
+  const color = isCorrect ? '#10b981' : '#ef4444';
+  document.getElementById('reviewFeedback').innerHTML =
+    `<span style="color:${color};font-weight:600">${icon}</span><br><span style="color:#64748b;font-size:13px">${item.meaning}</span>`;
+  document.getElementById('reviewInput').style.borderColor = color;
+  document.getElementById('reviewInput').disabled = true;
+
+  // Answered: hide skip button, show "下一个" or "完成"
+  const skipBtn = document.querySelector('#reviewBody .btn-secondary');
+  if (skipBtn) skipBtn.style.display = 'none';
+  if (isLast) {
+    document.getElementById('reviewCheckBtn').disabled = true;
+    document.getElementById('reviewCheckBtn').textContent = t('reviewDone');
+    setTimeout(finishReview, 1000);
+  } else {
+    document.getElementById('reviewCheckBtn').disabled = false;
+    document.getElementById('reviewCheckBtn').textContent = t('reviewNext');
+  }
+}
+// Bind Enter key for review input
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.getElementById('reviewModal').classList.contains('active')) {
+    e.preventDefault();
+    checkReviewAnswer();
+  }
+});
+
+function nextReviewWord() {
+  if (!reviewState) return;
+  reviewState.current++;
+  showReviewWord();
+}
+
+function skipReviewWord() {
+  if (!reviewState || reviewState.answered) return;
+  const item = reviewState.words[reviewState.current];
+  // Do NOT allow skipping last word
+  if (reviewState.current === reviewState.words.length - 1) return;
+  reviewState.wrong++;
+  if (!reviewState.wrongWords.find(w => w.word === item.word)) {
+    reviewState.wrongWords.push(item);
+  }
+  reviewState.current++;
+  showReviewWord();
+}
+
+function finishReview() {
+  if (!reviewState) return;
+  const total = reviewState.correct + reviewState.wrong;
+  const score = total > 0 ? Math.round(reviewState.correct / total * 100) : 0;
+  document.getElementById('reviewWord').textContent = '';
+  document.getElementById('reviewPos').textContent = '';
+  document.getElementById('reviewProgress').textContent = '复习完成';
+  document.getElementById('reviewInput').style.display = 'none';
+  document.getElementById('reviewCheckBtn').style.display = 'none';
+  (document.querySelector('#reviewBody .btn-secondary') || {}).style.display = 'none';
+  document.getElementById('reviewFeedback').innerHTML = '';
+  document.getElementById('reviewResult').style.display = 'block';
+  document.getElementById('reviewScore').textContent = `${score}%`;
+  document.getElementById('reviewRetryBtn').style.display = reviewState.wrongWords.length > 0 ? '' : 'none';
+  // Show wrong words
+  const wrongList = document.getElementById('reviewWrongList');
+  if (reviewState.wrongWords.length > 0) {
+    wrongList.innerHTML = `<div style="font-weight:600;margin-bottom:6px">答错的词 (${reviewState.wrongWords.length})：</div>` +
+      reviewState.wrongWords.map(w => `<span class="ann-tag" style="background:#fef2f2;color:#dc2626;margin:2px">${w.word} — ${w.meaning}</span>`).join(' ');
+  } else {
+    wrongList.innerHTML = '<span style="color:#10b981;font-weight:600">全部正确！🎉</span>';
+  }
+
+}
+
+function reviewWrongWords() {
+  if (!reviewState || reviewState.wrongWords.length === 0) return;
+  reviewState.words = reviewState.wrongWords.slice();
+  reviewState.current = 0;
+  reviewState.correct = 0;
+  reviewState.wrong = 0;
+  reviewState.wrongWords = [];
+  reviewState.answered = false;
+  document.getElementById('reviewResult').style.display = 'none';
+  document.getElementById('reviewInput').style.display = '';
+  document.getElementById('reviewCheckBtn').style.display = '';
+  const skipBtn = document.querySelector('#reviewBody .btn-secondary');
+  if (skipBtn) skipBtn.style.display = '';
+  showReviewWord();
+}
+
+function endReview() {
+  reviewState = null;
+  document.getElementById('reviewModal').classList.remove('active');
+}
+
+function exportWordBook(format) {
+  if (STATE.wordBook.length === 0) {
+    showToast('单词本为空', 'warning');
+    return;
+  }
+
+  let content, filename, mimeType;
+
+  if (format === 'json') {
+    content = JSON.stringify(STATE.wordBook, null, 2);
+    filename = 'linguaai_wordbook.json';
+    mimeType = 'application/json';
+  } else {
+    // CSV
+    const headers = 'word,meaning,pos,phonetic,synonyms,antonyms,collocations,derivatives,frequency,example,timestamp,date';
+    const rows = STATE.wordBook.map(w =>
+      `"${w.word}","${(w.meaning || '').replace(/"/g, '""')}","${w.pos || ''}","${(w.phonetic || '').replace(/"/g, '""')}","${(w.synonyms||[]).join('|').replace(/"/g, '""')}","${(w.antonyms||[]).join('|').replace(/"/g, '""')}","${(w.collocations||[]).join('|').replace(/"/g, '""')}","${(w.derivatives||[]).join('|').replace(/"/g, '""')}",${w.frequency||3},${w.timestamp},"${formatDate(w.timestamp)}"`
+    );
+    content = [headers, ...rows].join('\n');
+    filename = 'linguaai_wordbook.csv';
+    mimeType = 'text/csv;charset=utf-8';
+  }
+
+  downloadFile(content, filename, mimeType);
+  showToast(`已导出: ${filename}`, 'success');
+  hideExportModal();
+}
+
+function exportWordBookPDF() {
+  const words = STATE.wordBook;
+  if (words.length === 0) { showToast('生词本为空', 'warning'); return; }
+
+  // Build PDF HTML in dictionary style
+  const sorted = [...words].sort((a, b) => a.word.localeCompare(b.word));
+  const items = sorted.map(w => {
+    const eng = w.english ? `<div style="color:#64748b;font-size:13px;margin-top:2px">${w.english}</div>` : '';
+    const meta = [w.pos, w.phonetic ? '/' + w.phonetic + '/' : ''].filter(Boolean).join(' · ');
+    return `
+      <div style="padding:10px 0;border-bottom:1px solid #e2e8f0">
+        <div style="font-size:18px;font-weight:700;color:#0f172a">${w.word}</div>
+        ${meta ? `<div style="font-size:12px;color:#94a3b8;margin-top:2px">${meta}</div>` : ''}
+        <div style="font-size:15px;color:#2563eb;font-weight:500;margin-top:4px">${w.meaning}</div>
+        ${eng}
+      </div>`;
+  }).join('');
+
+  const html = `
+    <div style="font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;max-width:600px;margin:0 auto;padding:32px">
+      <h1 style="font-size:24px;text-align:center;color:#0f172a;margin-bottom:4px">📖 ${uiLang === 'zh' ? '生词本' : 'Vocabulary'}</h1>
+      <p style="text-align:center;color:#94a3b8;font-size:13px;margin-bottom:24px">${words.length} ${uiLang === 'zh' ? '个词' : 'words'}</p>
+      ${items}
+    </div>`;
+
+  const el = document.createElement('div');
+  el.innerHTML = html;
+  el.style.position = 'absolute'; el.style.left = '-9999px';
+  document.body.appendChild(el);
+
+  const opt = { margin: [15, 15], filename: 'vocabulary.pdf', html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+  html2pdf().set(opt).from(el).save().then(() => document.body.removeChild(el));
+}
+
+function exportAnnotations() {
+  if (STATE.annotations.length === 0) {
+    showToast('暂无批注数据', 'warning');
+    return;
+  }
+  const content = JSON.stringify(STATE.annotations, null, 2);
+  downloadFile(content, 'linguaai_annotations.json', 'application/json');
+  showToast('批注已导出', 'success');
+  hideExportModal();
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+//  ANNOTATIONS PERSISTENCE
+// ============================================================
+
+function loadAnnotations() {
+  try {
+    const saved = localStorage.getItem('linguaai_annotations');
+    if (saved) STATE.annotations = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function loadSentences() {
+  try {
+    const saved = localStorage.getItem('linguaai_sentences');
+    if (saved) STATE.sentences = JSON.parse(saved);
+  } catch(e) {}
+}
+
+// ============================================================
+//  ARTICLE PERSISTENCE
+// ============================================================
+
+function saveArticleToLocal() {
+  const area = document.getElementById('articleArea');
+  const html = area.innerHTML;
+  // Skip saving if content contains expired blob URL or PDF iframe
+  if (html.includes('blob:') || html.includes('<iframe')) return;
+  localStorage.setItem('linguaai_article', html);
+}
+
+function loadArticleFromLocal() {
+  const saved = localStorage.getItem('linguaai_article');
+  if (saved && !saved.includes('blob:') && !saved.includes('<iframe')) {
+    document.getElementById('articleArea').innerHTML = saved;
+    attachArticleDelegates();
+    updateTokenTooltips();
+    // Restore currentArticleId by matching article text content
+    const textContent = document.getElementById('articleArea').textContent;
+    const matched = STATE.articleHistory.find(a => a.content && textContent && a.content.replace(/\*\*(.+?)\*\*/g, '$1').includes(textContent.slice(0, 50)));
+    if (matched) {
+      STATE.currentArticleId = matched.id;
+      applyHighlights(STATE.currentArticleId);
+    }
+    // Even without matched ID, restore highlights from the DOM
+    const domHighlighted = document.querySelectorAll('.token.highlighted');
+    if (domHighlighted.length > 0 && !STATE.currentArticleId) {
+      // Rebuild highlights data from DOM
+      STATE.highlights['_restored'] = STATE.highlights['_restored'] || { color: '#2563eb', words: [] };
+      const restored = STATE.highlights['_restored'].words || STATE.highlights['_restored'];
+      domHighlighted.forEach(t => {
+        const w = t.dataset.word;
+        if (w && !restored.includes(w)) restored.push(w);
+      });
+      if (restored.length > 0) {
+        STATE.currentArticleId = '_restored';
+        saveHighlights();
+      }
+    }
+  }
+}
+
+// Also load article on startup
+document.addEventListener('DOMContentLoaded', () => {
+  loadArticleFromLocal();
+});
+
+// ============================================================
+//  ARTICLE HISTORY
+// ============================================================
+
+function saveArticleHistory() {
+  localStorage.setItem('linguaai_article_history', JSON.stringify(STATE.articleHistory));
+}
+
+function loadArticleHistory() {
+  try {
+    const saved = localStorage.getItem('linguaai_article_history');
+    if (saved) {
+      STATE.articleHistory = JSON.parse(saved);
+      renderArticleHistory();
+    }
+  } catch(e) {}
+}
+
+function addArticleToHistory(title, content, type) {
+  // Avoid duplicates (same content)
+  const dup = STATE.articleHistory.find(a => a.content === content);
+  if (dup) {
+    dup.timestamp = Date.now();
+    saveArticleHistory();
+    renderArticleHistory();
+    return dup.id;
+  }
+  const id = 'art_' + Date.now();
+  STATE.articleHistory.unshift({
+    id: id,
+    title: title || '无标题',
+    content: content,
+    type: type || 'generated',
+    timestamp: Date.now()
+  });
+  STATE.currentArticleId = id;
+  // Keep max 100 articles
+  if (STATE.articleHistory.length > 100) STATE.articleHistory.pop();
+  saveArticleHistory();
+  renderArticleHistory();
+  return id;
+}
+
+function renderArticleHistory() {
+  const list = document.getElementById('articleHistoryList');
+  if (STATE.articleHistory.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:16px 0">暂无文章历史</div>';
+    return;
+  }
+  list.innerHTML = STATE.articleHistory.map(a => `
+    <div onclick="loadHistoryArticle('${a.id}')"
+         style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:all 0.15s;${a.id === STATE.currentArticleId ? 'background:#eff6ff;border:1px solid #bfdbfe' : 'border:1px solid transparent'}"
+         onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${a.id === STATE.currentArticleId ? '#eff6ff' : 'transparent'}'">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:#334155">
+        ${a.title}
+        <span style="font-size:11px;color:#94a3b8;margin-left:4px">${a.type === 'imported' ? '(导入)' : ''}</span>
+      </span>
+      <button onclick="event.stopPropagation();deleteHistoryArticle('${a.id}')" style="border:none;background:none;color:#cbd5e1;cursor:pointer;padding:2px;font-size:12px;flex-shrink:0" title="删除">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+function loadHistoryArticle(id) {
+  const article = STATE.articleHistory.find(a => a.id === id);
+  if (!article) { showToast('文章不存在', 'warning'); return; }
+  STATE.currentArticleId = id;
+  renderArticle(article.content);
+  renderArticleHistory();
+  showToast(`已加载: ${article.title}`, 'info');
+}
+
+function deleteHistoryArticle(id) {
+  STATE.articleHistory = STATE.articleHistory.filter(a => a.id !== id);
+  if (STATE.currentArticleId === id) STATE.currentArticleId = null;
+  saveArticleHistory();
+  renderArticleHistory();
+}
+
+// Override renderArticle to also save to history
+const _origRenderArticle = renderArticle;
+renderArticle = function(markdownText) {
+  _origRenderArticle(markdownText);
+  // Extract title and save to history
+  const area = document.getElementById('articleArea');
+  const titleEl = area.querySelector('.article-title');
+  const title = titleEl ? titleEl.textContent : 'AI 文章 ' + new Date().toLocaleString('zh-CN');
+  addArticleToHistory(title, markdownText, 'generated');
+};
+
+// ============================================================
+//  IMPORT ARTICLE
+// ============================================================
+
+function importArticle() {
+  document.getElementById('importFileInput').click();
+}
+
+async function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  showLoading(`正在导入 ${file.name}...`);
+
+  try {
+    let text = '';
+    if (ext === 'txt' || ext === 'md') {
+      text = await file.text();
+    } else if (ext === 'docx') {
+      showLoading('正在解析 DOCX 文件...');
+      text = await extractDocxText(file);
+    } else {
+      hideLoading();
+      showToast('不支持的文件格式，仅支持 txt、md、docx', 'error');
+      return;
+    }
+
+    if (!text.trim()) {
+      hideLoading();
+      showToast('文件内容为空', 'warning');
+      return;
+    }
+
+    hideLoading();
+    const title = file.name.replace(/\.(txt|md|docx)$/i, '');
+    addArticleToHistory(title, text, 'imported');
+    renderArticle(text);
+    showToast(`已导入: ${file.name}`, 'success');
+
+  } catch(e) {
+    hideLoading();
+    showToast(`导入失败: ${e.message}`, 'error');
+  }
+}
+
+// Minimal DOCX text extractor (works in modern browsers)
+async function extractDocxText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8 = new Uint8Array(arrayBuffer);
+
+  // Find "word/document.xml" in ZIP local file headers
+  // ZIP local file header: PK\x03\x04 (4 bytes) + various fields
+  let i = 0;
+  let docxXml = null;
+
+  while (i < uint8.length - 30) {
+    // Check for PK\x03\x04 signature
+    if (uint8[i] === 0x50 && uint8[i+1] === 0x4B && uint8[i+2] === 0x03 && uint8[i+3] === 0x04) {
+      const compressionMethod = uint8[i+8] | (uint8[i+9] << 8);
+      const compressedSize = uint8[i+18] | (uint8[i+19] << 8) | (uint8[i+20] << 16) | (uint8[i+21] << 24);
+      const uncompressedSize = uint8[i+22] | (uint8[i+23] << 8) | (uint8[i+24] << 16) | (uint8[i+25] << 24);
+      const nameLen = uint8[i+26] | (uint8[i+27] << 8);
+      const extraLen = uint8[i+28] | (uint8[i+29] << 8);
+
+      const fileName = new TextDecoder().decode(uint8.slice(i+30, i+30+nameLen));
+
+      if (fileName === 'word/document.xml') {
+        const dataStart = i + 30 + nameLen + extraLen;
+        const dataEnd = dataStart + compressedSize;
+
+        if (compressionMethod === 0) {
+          // Stored (uncompressed)
+          docxXml = new TextDecoder().decode(uint8.slice(dataStart, dataEnd));
+        } else if (compressionMethod === 8 && typeof DecompressionStream !== 'undefined') {
+          // Deflated - use DecompressionStream
+          const compressedData = uint8.slice(dataStart, dataEnd);
+          const blob = new Blob([compressedData]);
+          const stream = blob.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+          const reader = stream.getReader();
+          const chunks = [];
+          while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            chunks.push(value);
+          }
+          const totalLen = chunks.reduce((sum, c) => sum + c.length, 0);
+          const result = new Uint8Array(totalLen);
+          let offset = 0;
+          for (const chunk of chunks) {
+            result.set(chunk, offset);
+            offset += chunk.length;
+          }
+          docxXml = new TextDecoder().decode(result);
+        }
+        break;
+      }
+
+      // Skip to next entry
+      const entrySize = 30 + nameLen + extraLen + compressedSize;
+      i += entrySize;
+    } else {
+      // Try alternate central directory
+      if (uint8[i] === 0x50 && uint8[i+1] === 0x4B && uint8[i+2] === 0x01 && uint8[i+3] === 0x02) {
+        break;
+      }
+      i++;
+    }
+  }
+
+  if (!docxXml) {
+    // Fallback: try to find any readable text in the file
+    const text = new TextDecoder('utf-8', { fatal: false }).decode(uint8);
+    const lines = text.split('\n').filter(l => l.trim() && !l.includes('PK') && !l.match(/^[\x00-\x08\x0B\x0C\x0E-\x1F]/));
+    if (lines.length > 0) return lines.join('\n');
+    throw new Error('无法解析 DOCX 文件：未找到文档内容');
+  }
+
+  // Extract text from XML
+  const textParts = [];
+  const xmlTexts = docxXml.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
+  if (xmlTexts) {
+    for (const match of xmlTexts) {
+      const txt = match.replace(/<[^>]+>/g, '');
+      if (txt.trim()) textParts.push(txt);
+    }
+  }
+
+  // Join paragraphs (detect paragraph breaks)
+  const paragraphs = [];
+  let currentPara = [];
+  const allContent = docxXml.split(/<w:p[ >]/);
+  for (let pi = 1; pi < allContent.length; pi++) {
+    const paraRuns = allContent[pi].match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
+    if (paraRuns) {
+      const paraText = paraRuns.map(r => r.replace(/<[^>]+>/g, '')).join('');
+      if (paraText.trim()) paragraphs.push(paraText.trim());
+    }
+  }
+
+  return paragraphs.length > 0 ? paragraphs.join('\n\n') : textParts.join(' ');
+}
+
+// ============================================================
+//  EXPORT FUNCTIONS
+// ============================================================
+
+function exportCurrentArticle(format) {
+  const area = document.getElementById('articleArea');
+  const titleEl = area.querySelector('.article-title');
+  const title = titleEl ? titleEl.textContent : 'article';
+
+  // Get the markdown source from articleText if available, or extract from DOM
+  let content = STATE.articleText || area.textContent || '';
+
+  if (format === 'txt') {
+    // Strip markdown to plain text
+    let plain = content
+      .replace(/^#\s+/gm, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    downloadFile(plain, `${title}.txt`, 'text/plain;charset=utf-8');
+  } else {
+    // Markdown format: ensure proper .md extension
+    let md = content.trim();
+    if (!md.startsWith('# ')) {
+      md = '# ' + title + '\n\n' + md;
+    }
+    downloadFile(md, `${title}.md`, 'text/markdown;charset=utf-8');
+  }
+  showToast(`已导出: ${title}.${format}`, 'success');
+  hideExportModal();
+}
+
+function exportAllData() {
+  const data = {
+    exportTime: new Date().toISOString(),
+    wordBook: STATE.wordBook,
+    annotations: STATE.annotations,
+    highlights: STATE.highlights,
+    articleHistory: STATE.articleHistory.map(a => ({
+      id: a.id,
+      title: a.title,
+      content: a.content,
+      type: a.type,
+      timestamp: a.timestamp
+    }))
+  };
+
+  const content = JSON.stringify(data, null, 2);
+  const dateStr = new Date().toISOString().slice(0, 10);
+  downloadFile(content, `linguaai_full_backup_${dateStr}.json`, 'application/json');
+  showToast('全部数据已导出', 'success');
+  hideExportModal();
+}
+
+// ============================================================
+//  HIGHLIGHT MODE
+// ============================================================
+
+function setHLColor(color) {
+  STATE.highlightColor = color;
+  document.getElementById('hlColorDot').style.background = color;
+  document.getElementById('hlColorPicker').style.display = 'none';
+}
+
+function toggleHLPicker(e) {
+  e.stopPropagation();
+  const p = document.getElementById('hlColorPicker');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleHighlightMode() {
+  STATE.highlightMode = !STATE.highlightMode;
+  const btn = document.getElementById('highlightBtn');
+  const area = document.querySelector('.article-area');
+  if (STATE.highlightMode) {
+    btn.classList.add('active');
+    btn.querySelector('span').textContent = t('brushOff');
+    area.classList.add('highlight-active');
+    showToast(t('brushOn'), 'info');
+  } else {
+    btn.classList.remove('active');
+    btn.querySelector('span').textContent = t('brushLabel');
+    area.classList.remove('highlight-active');
+  }
+}
+
+// ===== EVENT DELEGATION =====
+// Handles all token interactions via a single delegate on .article-text
+// Eliminates innerHTML serialization issues with onclick attributes
+
+function attachArticleDelegates() {
+  const text = document.querySelector('.article-text');
+  if (!text) return;
+
+  if (text._delegateAttached) return;
+  text._delegateAttached = true;
+
+  // Normal mode: click token for AI analysis
+  text.addEventListener('click', function(e) {
+    if (STATE.highlightMode) return; // handled by mouseup
+    const token = e.target.closest('.token');
+    if (token && token.dataset.word) {
+      handleTokenClick(token);
+    }
+  });
+
+  // Brush mode: mouseup handles BOTH single-click and drag-selection
+  text.addEventListener('mouseup', function(e) {
+    if (!STATE.highlightMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && text.contains(sel.anchorNode) && text.contains(sel.focusNode)) {
+      // Drag-selection: highlight all tokens in range, round only outermost corners
+      const range = sel.getRangeAt(0);
+      const allTokens = Array.from(text.querySelectorAll('.token'));
+      const inRange = allTokens.filter(t => range.intersectsNode(t) && !t.classList.contains('highlighted'));
+      inRange.forEach(t => {
+        t.classList.add('highlighted');
+        t.style.setProperty('background', STATE.highlightColor, 'important');
+      });
+      // Round corners: only the first and last get radius
+      if (inRange.length === 1) {
+        inRange[0].style.setProperty('border-radius', '4px', 'important');
+      } else if (inRange.length > 1) {
+        inRange[0].style.setProperty('border-radius', '4px 0 0 4px', 'important');
+        inRange[inRange.length - 1].style.setProperty('border-radius', '0 4px 4px 0', 'important');
+      }
+      // Save words with color
+      inRange.forEach(t => {
+        const w = t.dataset.word;
+        if (STATE.currentArticleId && w) {
+          if (!STATE.highlights[STATE.currentArticleId]) STATE.highlights[STATE.currentArticleId] = { color: STATE.highlightColor, words: [] };
+          if (!STATE.highlights[STATE.currentArticleId].words.includes(w)) STATE.highlights[STATE.currentArticleId].words.push(w);
+        }
+      });
+      sel.removeAllRanges();
+      saveHighlights();
+      if (inRange.length > 0) showToast(`🎯 笔刷标记了 ${inRange.length} 个词`, 'success');
+    } else {
+      // Single click on a word: highlight all occurrences of that word
+      const token = e.target.closest('.token');
+      if (token && token.dataset.word) {
+        toggleWordHighlight(token);
+      }
+    }
+  });
+
+  // Hover delegation for tooltip
+  text.addEventListener('mouseover', function(e) {
+    const token = e.target.closest('.token');
+    if (token && token.dataset.word) showWordTranslation(token);
+  });
+  text.addEventListener('mouseout', function(e) {
+    const token = e.target.closest('.token');
+    if (token && token.dataset.word) hideTranslateTooltip();
+  });
+}
+
+function toggleWordHighlight(element) {
+  const word = element.dataset.word;
+  if (!word) {
+    showToast('❌ 未识别到单词: ' + (element.textContent || ''), 'warning');
+    return;
+  }
+
+  showToast('🎯 笔刷命中: ' + word, 'success');
+
+  const alreadyHighlighted = element.classList.contains('highlighted');
+  if (alreadyHighlighted) return;
+
+  const color = STATE.highlightColor;
+  element.style.setProperty('background', color, 'important');
+  element.style.setProperty('color', '#fff', 'important');
+  element.style.setProperty('border-radius', '4px', 'important');
+  element.classList.add('highlighted');
+
+  if (STATE.currentArticleId) {
+    if (!STATE.highlights[STATE.currentArticleId]) STATE.highlights[STATE.currentArticleId] = { color, words: [] };
+    const hList = STATE.highlights[STATE.currentArticleId].words;
+    if (!hList.includes(word)) hList.push(word);
+
+    document.querySelectorAll(`.token[data-word="${word}"]`).forEach(t => {
+      t.style.setProperty('background', color, 'important');
+      t.style.setProperty('color', '#fff', 'important');
+      t.style.setProperty('border-radius', '4px', 'important');
+      t.classList.add('highlighted');
+    });
+    saveHighlights();
+  }
+}
+
+function clearAllHighlights() {
+  // Clear all highlighted elements in the DOM regardless of currentArticleId
+  const highlighted = document.querySelectorAll('.token.highlighted');
+  highlighted.forEach(t => {
+    t.classList.remove('highlighted');
+    t.style.removeProperty('background');
+    t.style.removeProperty('color');
+    t.style.removeProperty('border-radius');
+  });
+  if (STATE.currentArticleId && STATE.highlights[STATE.currentArticleId]) {
+    STATE.highlights[STATE.currentArticleId] = { color: '#2563eb', words: [] };
+  } else {
+    STATE.highlights = {};
+  }
+  saveHighlights();
+  showToast('已清除全部高亮', 'info');
+}
+
+function saveHighlights() {
+  localStorage.setItem('linguaai_highlights', JSON.stringify(STATE.highlights));
+}
+
+function loadHighlights() {
+  try {
+    const saved = localStorage.getItem('linguaai_highlights');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      for (const key of Object.keys(parsed)) {
+        if (Array.isArray(parsed[key])) parsed[key] = { color: '#2563eb', words: parsed[key] };
+      }
+      STATE.highlights = parsed;
+    }
+  } catch(e) {}
+}
+
+function applyHighlights(articleId) {
+  if (!articleId || !STATE.highlights[articleId]) return;
+  const h = STATE.highlights[articleId];
+  const words = h.words || h;
+  const color = h.color || '#2563eb';
+  words.forEach(w => {
+    document.querySelectorAll(`.token[data-word="${w}"]`).forEach(t => {
+      t.style.setProperty('background', color, 'important');
+      t.style.setProperty('color', '#fff', 'important');
+      t.style.setProperty('border-radius', '4px', 'important');
+      t.classList.add('highlighted');
+    });
+  });
+}
+
+// Override renderArticle to also apply highlights
+const _origRenderArticle2 = renderArticle;
+renderArticle = function(markdownText) {
+  _origRenderArticle2(markdownText);
+  // Apply saved highlights after rendering
+  if (STATE.currentArticleId) {
+    applyHighlights(STATE.currentArticleId);
+  }
+};
+
+// ============================================================
+//  TTS (Text-to-Speech)
+// ============================================================
+
+function speakText(text, lang = 'en-US') {
+  if (!text) return;
+
+  if (STATE.speechSynth.speaking) {
+    STATE.speechSynth.cancel();
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.9;
+  utterance.pitch = 1.0;
+
+  // Try to find a good voice
+  const voices = STATE.speechSynth.getVoices();
+  const preferredVoice = voices.find(v => v.lang.startsWith(lang) && v.localService) || voices.find(v => v.lang.startsWith(lang));
+  if (preferredVoice) utterance.voice = preferredVoice;
+
+  STATE.isSpeaking = true;
+  utterance.onend = () => { STATE.isSpeaking = false; };
+  utterance.onerror = () => { STATE.isSpeaking = false; };
+
+  STATE.speechSynth.speak(utterance);
+}
+
+function toggleArticleTTS() {
+  const area = document.getElementById('articleArea');
+  const text = area.textContent || '';
+  if (!text) { showToast('请先生成或导入文章', 'warning'); return; }
+
+  const btn = document.getElementById('ttsBtn');
+  if (STATE.speechSynth.speaking) {
+    STATE.speechSynth.cancel();
+    STATE.isSpeaking = false;
+    btn.classList.remove('playing');
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.9;
+  utterance.pitch = 1.0;
+  const voices = STATE.speechSynth.getVoices();
+  const preferredVoice = voices.find(v => v.lang.startsWith('en-US') && v.localService) || voices.find(v => v.lang.startsWith('en-US'));
+  if (preferredVoice) utterance.voice = preferredVoice;
+  STATE.isSpeaking = true;
+  utterance.onend = () => {
+    STATE.isSpeaking = false;
+    btn.classList.remove('playing');
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
+  };
+  utterance.onerror = () => { STATE.isSpeaking = false; };
+  STATE.speechSynth.speak(utterance);
+  btn.classList.add('playing');
+  btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+}
+
+// ============================================================
+//  MODE SWITCHING
+// ============================================================
+
+function setMode(mode) {
+  STATE.currentMode = mode;
+  const wordBtn = document.getElementById('modeWord');
+  const sentBtn = document.getElementById('modeSentence');
+
+  if (mode === 'word') {
+    wordBtn.className = 'btn btn-sm btn-primary';
+    sentBtn.className = 'btn btn-sm btn-secondary';
+  } else {
+    wordBtn.className = 'btn btn-sm btn-secondary';
+    sentBtn.className = 'btn btn-sm btn-primary';
+  }
+  updateTokenTooltips();
+}
+
+function updateTokenTooltips() {
+  const tip = STATE.currentMode === 'word' ? t('modeWordTip') : t('modeSentTip');
+  document.querySelectorAll('.token:not(.token-space):not(.punct)').forEach(el => {
+    el.title = tip;
+  });
+}
+
+// ============================================================
+//  UI UTILITIES
+// ============================================================
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  const icons = {
+    success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+
+  toast.innerHTML = `${icons[type] || icons.info} ${message}`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function showLoading(text, isAnnotation = false) {
+  if (isAnnotation) {
+    const container = document.getElementById('annotationContent');
+    document.getElementById('annotationEmpty').style.display = 'none';
+    container.style.display = 'block';
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0;gap:12px">
+        <div class="loading-spinner"></div>
+        <div style="font-size:14px;color:#64748b">${text || 'AI 分析中...'}</div>
+      </div>
+    `;
+  } else {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('active');
+    document.getElementById('loadingText').textContent = text || '加载中...';
+  }
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  const days = Math.floor(diff / 86400000);
+
+  if (days === 0) {
+    return `今天 ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  } else if (days === 1) {
+    return `昨天 ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  } else {
+    return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+  }
+}
+
+function scrollToTop() {
+  const area = document.querySelector('.article-area');
+  if (area) area.scrollTop = 0;
+}
+
+function clearArticle() {
+  if (!confirm('确定清空当前文章吗？')) return;
+  document.getElementById('articleArea').innerHTML = '';
+  localStorage.removeItem('linguaai_article');
+  clearAnnotation();
+  showToast('文章已清空', 'info');
+}
+
+function showExportModal() {
+  document.getElementById('exportModal').classList.add('active');
+}
+
+function hideExportModal() {
+  document.getElementById('exportModal').classList.remove('active');
+}
+
+// ============================================================
+//  AUTO-SAVE article on page unload
+// ============================================================
+
+window.addEventListener('beforeunload', () => {
+  const area = document.getElementById('articleArea');
+  if (area.innerHTML) {
+    localStorage.setItem('linguaai_article', area.innerHTML);
+  }
+});
+
+// ============================================================
+//  Preload speech synthesis voices
+// ============================================================
+
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices(); // Trigger async loading
+  window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+  };
+}
+
+console.log('LinguaAI Reader loaded successfully!');
+console.log('Made with ❤️ - AI Language Learning System');
+</script>
 </body>
 </html>
