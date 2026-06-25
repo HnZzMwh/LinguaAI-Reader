@@ -330,7 +330,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
         <div style="text-align:center;color:#94a3b8;font-size:12px;padding:16px 0"><span data-i18n="historyEmpty">暂无文章历史</span></div>
       </div>
     </div>
-<input type="file" id="importFileInput" accept=".txt,.md,.docx" style="display:none" onchange="handleImportFile(event)">
+<input type="file" id="importFileInput" accept=".txt,.md,.docx,image/*" style="display:none" onchange="handleImportFile(event)">
   </aside>
 
   <!-- ===== MAIN AREA ===== -->
@@ -407,6 +407,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           <span data-i18n="configTest">测试连接</span>
         </button>
+      </div>
+
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
+      <div class="form-group">
+        <label class="form-label" data-i18n="ocrTitle">图片 OCR 识别（导入图片时使用）</label>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="ocrGeminiKey">Gemini API Key（首选）</label>
+        <input class="form-input" id="ocrGeminiKey" type="password" placeholder="AIza..." autocomplete="off">
+        <div class="form-hint" data-i18n="ocrGeminiHint">Gemini 2.0 Flash，用于图片文字识别</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="ocrMistralKey">Mistral API Key（降级）</label>
+        <input class="form-input" id="ocrMistralKey" type="password" placeholder="..." autocomplete="off">
+        <div class="form-hint" data-i18n="ocrMistralHint">Mistral OCR，Gemini 失败时自动降级</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -585,7 +600,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 
 // ===== GLOBAL STATE =====
 const STATE = {
-  config: { apiKey: '', baseUrl: '', model: '' },
+  config: { apiKey: '', baseUrl: '', model: '', ocrGeminiKey: '', ocrMistralKey: '' },
   annotations: [],       // { id, text, pos, chinese, phonetic, synonyms, antonyms, example, frequency, sentence, saved, timestamp }
   wordBook: [],          // { word, meaning, pos, sentence, timestamp }
   sentences: [],         // { text, analysis, timestamp }
@@ -642,6 +657,9 @@ const LANG = {
     configApiKeyHint: '你的 API 密钥，仅保存在本地浏览器', configBaseUrlHint: 'OpenAI 兼容接口地址，例如 api.deepseek.com',
     configModelHint: '模型名称，例如 deepseek-chat, gpt-4o-mini, qwen-plus',
     configApiKeyPlaceholder: 'sk-...', configBaseUrlPlaceholder: 'https://api.deepseek.com', configModelPlaceholder: 'deepseek-chat',
+    ocrTitle: '图片 OCR 识别（导入图片时使用）',
+    ocrGeminiKey: 'Gemini API Key（首选）', ocrGeminiHint: 'Gemini 2.0 Flash，用于图片文字识别',
+    ocrMistralKey: 'Mistral API Key（降级）', ocrMistralHint: 'Mistral OCR，Gemini 失败时自动降级',
     ttsPlay: '朗读', ttsStop: '停止',
     wordCount: '已学', wordCountLabel: '词汇量：',
     annTitle: 'AI 解析',
@@ -701,6 +719,9 @@ const LANG = {
     configApiKeyHint: 'Your API key, stored locally only', configBaseUrlHint: 'OpenAI-compatible API base URL, e.g. api.deepseek.com',
     configModelHint: 'Model name, e.g. deepseek-chat, gpt-4o-mini, qwen-plus',
     configApiKeyPlaceholder: 'sk-...', configBaseUrlPlaceholder: 'https://api.deepseek.com', configModelPlaceholder: 'deepseek-chat',
+    ocrTitle: 'Image OCR (used when importing images)',
+    ocrGeminiKey: 'Gemini API Key (Primary)', ocrGeminiHint: 'Gemini 2.0 Flash for image text recognition',
+    ocrMistralKey: 'Mistral API Key (Fallback)', ocrMistralHint: 'Mistral OCR, auto-fallback when Gemini fails',
     ttsPlay: 'Play', ttsStop: 'Stop',
     wordCount: 'learned', wordCountLabel: 'Words:',
     annTitle: 'AI Analysis',
@@ -857,6 +878,8 @@ function loadConfig() {
       document.getElementById('apiKey').value = STATE.config.apiKey || '';
       document.getElementById('baseUrl').value = STATE.config.baseUrl || 'https://api.deepseek.com';
       document.getElementById('model').value = STATE.config.model || 'deepseek-chat';
+      document.getElementById('ocrGeminiKey').value = STATE.config.ocrGeminiKey || '';
+      document.getElementById('ocrMistralKey').value = STATE.config.ocrMistralKey || '';
     } else {
       document.getElementById('baseUrl').value = 'https://api.deepseek.com';
       document.getElementById('model').value = 'deepseek-chat';
@@ -875,6 +898,8 @@ function saveConfig() {
     apiKey: document.getElementById('apiKey').value.trim(),
     baseUrl: baseUrl,
     model: document.getElementById('model').value.trim(),
+    ocrGeminiKey: document.getElementById('ocrGeminiKey').value.trim(),
+    ocrMistralKey: document.getElementById('ocrMistralKey').value.trim(),
   };
   localStorage.setItem('linguaai_config', JSON.stringify(STATE.config));
   hideConfigModal();
@@ -2735,25 +2760,136 @@ function importArticle() {
   document.getElementById('importFileInput').click();
 }
 
+// ============================================================
+//  OCR — 图片文字识别（Gemini 2.0 Flash 首选 → Mistral OCR 降级）
+// ============================================================
+
+// 文件转 base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// OCR 提示词：保留原文结构，输出纯文本
+const OCR_PROMPT = '请识别这张图片中的所有文字内容。要求：1. 严格按照原文顺序输出；2. 保留段落结构，段落之间用空行分隔；3. 不要添加任何解释、标题或额外说明；4. 只输出识别到的纯文本。';
+
+// 首选：Gemini 2.0 Flash
+async function ocrWithGemini(base64, mimeType) {
+  const apiKey = STATE.config.ocrGeminiKey;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: OCR_PROMPT },
+          { inline_data: { mime_type: mimeType, data: base64 } }
+        ]
+      }],
+      generationConfig: { temperature: 0 }
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Gemini API error: ${res.status} ${errText.slice(0, 120)}`);
+  }
+
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+  if (!text.trim()) throw new Error('Gemini 返回内容为空');
+  return text;
+}
+
+// 降级：Mistral OCR
+async function ocrWithMistral(base64, mimeType) {
+  const apiKey = STATE.config.ocrMistralKey;
+  const endpoint = 'https://api.mistral.ai/v1/ocr';
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'mistral-ocr-latest',
+      document: {
+        type: 'image_url',
+        image_url: `data:${mimeType};base64,${base64}`
+      }
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Mistral API error: ${res.status} ${errText.slice(0, 120)}`);
+  }
+
+  const data = await res.json();
+  const text = (data.pages || []).map(p => p.markdown || '').join('\n\n');
+  if (!text.trim()) throw new Error('Mistral 返回内容为空');
+  return text;
+}
+
+// OCR 主入口：自动降级
+async function recognizeImage(file) {
+  const { ocrGeminiKey, ocrMistralKey } = STATE.config;
+
+  if (!ocrGeminiKey && !ocrMistralKey) {
+    throw new Error('请先在配置中填写 Gemini 或 Mistral API Key');
+  }
+
+  const base64 = await fileToBase64(file);
+  const mimeType = file.type;
+
+  // 首选 Gemini 2.0 Flash
+  if (ocrGeminiKey) {
+    try {
+      return await ocrWithGemini(base64, mimeType);
+    } catch (err) {
+      console.warn('Gemini OCR 失败，降级到 Mistral:', err.message);
+      if (!ocrMistralKey) throw err;
+    }
+  }
+
+  // 降级 Mistral OCR
+  if (ocrMistralKey) {
+    return await ocrWithMistral(base64, mimeType);
+  }
+
+  throw new Error('OCR 识别失败');
+}
+
 async function handleImportFile(event) {
   const file = event.target.files[0];
   if (!file) return;
   event.target.value = '';
 
   const ext = file.name.split('.').pop().toLowerCase();
+  const isImage = file.type.startsWith('image/');
 
   showLoading(`正在导入 ${file.name}...`);
 
   try {
     let text = '';
-    if (ext === 'txt' || ext === 'md') {
+    if (isImage) {
+      showLoading('正在识别图片文字 (OCR)...');
+      text = await recognizeImage(file);
+    } else if (ext === 'txt' || ext === 'md') {
       text = await file.text();
     } else if (ext === 'docx') {
       showLoading('正在解析 DOCX 文件...');
       text = await extractDocxText(file);
     } else {
       hideLoading();
-      showToast('不支持的文件格式，仅支持 txt、md、docx', 'error');
+      showToast('不支持的文件格式，仅支持 txt、md、docx、图片', 'error');
       return;
     }
 
@@ -2764,7 +2900,7 @@ async function handleImportFile(event) {
     }
 
     hideLoading();
-    const title = file.name.replace(/\.(txt|md|docx)$/i, '');
+    const title = isImage ? file.name.replace(/\.[^.]+$/i, '') : file.name.replace(/\.(txt|md|docx)$/i, '');
     addArticleToHistory(title, text, 'imported');
     renderArticle(text);
     showToast(`已导入: ${file.name}`, 'success');
